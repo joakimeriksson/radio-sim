@@ -9,8 +9,8 @@
   <property name="radiomedium.lib" location="../radio-medium/lib"/>
   <property name="jarfile" location="emul8-client.jar"/>
   <property name="javac.debug" value="true"/>
-  <property name="ant.build.javac.source" value="1.8"/>
-  <property name="ant.build.javac.target" value="1.8"/>
+  <!-- <property name="ant.build.javac.source" value="1.8"/> -->
+  <!-- <property name="ant.build.javac.target" value="1.8"/> -->
   <property name="ARGS" value=""/>
 
   <target name="init">

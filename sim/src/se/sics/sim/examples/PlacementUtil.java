@@ -250,8 +250,9 @@ public class PlacementUtil {
     }
 
     public static void makeImportantLinks(Simulator sim, Node[] nodes, Node sink) {
-        // kör en flood från SINK => meddelanden till alla noder i
-        // sink neightbor + skapa path (Hashtabell med alla som msg passerat)
+        // run a flood from SINK => messages to all nodes in sink
+        // neighbor + create path (Hash table with all that the
+        // messages have passed)
 
         Hashtable<String,String> path = new Hashtable<String,String>();
         // Add sink node to the "Path" and then go!
