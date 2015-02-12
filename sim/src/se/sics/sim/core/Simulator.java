@@ -177,8 +177,11 @@ public class Simulator implements Runnable {
     }
 
     private boolean finish() {
-
-        long totalUtility = ((CC2420Node) nodes.get(0)).getUtility();
+        Node node = nodes.get(0);
+        long totalUtility = 0;
+        if (node instanceof CC2420Node) {
+            totalUtility = ((CC2420Node) node).getUtility();
+        }
         // IF ONLY USING UTILITY OF NODE 0:
         boolean errorFree = true;
         for (int i = 0, n = nodes.size(); i < n; i++) {
@@ -222,17 +225,23 @@ public class Simulator implements Runnable {
 
         // store the total utility of this round:
         properties.put("policy.lastGlobalUtility", (double) totalUtility);
-        properties.put("policy.lastPolicy", nodes.get(0).stateListener.getPolicyAsText());
+        if (node.stateListener != null) {
+            properties.put("policy.lastPolicy", node.stateListener.getPolicyAsText());
+        }
         // compare with previous best result
         Double bestUtility = (Double) properties.get("policy.bestGlobalUtility");
         if (bestUtility == null || (bestUtility != null && bestUtility < totalUtility)) {
             properties.put("policy.bestGlobalUtility", (double) totalUtility);
-            properties.put("policy.bestPolicyAsText", nodes.get(0).stateListener.getPolicyAsText());
-            properties.put("policy.bestPolicy", nodes.get(0).stateListener.getPolicy());
+            if (node.stateListener != null) {
+                properties.put("policy.bestPolicyAsText", node.stateListener.getPolicyAsText());
+                properties.put("policy.bestPolicy", node.stateListener.getPolicy());
+            }
         } // else do nuffin
 
         setup.finish(this);
-        nodes.get(0).stateListener.finish(this);
+        if (node.stateListener != null) {
+            node.stateListener.finish(this);
+        }
 
         // EpisodeManager manager = EpisodeManager.getDefault();
         // if (manager != null) {

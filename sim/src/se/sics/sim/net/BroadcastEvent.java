@@ -77,7 +77,7 @@ public class BroadcastEvent extends TimeEvent implements TimerEventListener, Mes
 
     public void timerEvent(long time, Object data) {
         this.time = time;
-        execute(0);
+        execute(time);
     }
 
     public void execute(long time) {
