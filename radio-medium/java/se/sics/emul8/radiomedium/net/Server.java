@@ -13,11 +13,20 @@ public class Server {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
     private int port;
+    private boolean hasStarted;
     private boolean isRunning;
+    private JsonObject welcome;
     private ClientConnection[] clients;
 
     public Server(int port) {
         this.port = port;
+
+        JsonObject rm = new JsonObject();
+        rm.set("name", "Cooja radium medium");
+        rm.set("api-version", "0.0.1");
+
+        welcome = new JsonObject();
+        welcome.set("radio-medium", rm);
     }
 
     public boolean isRunning() {
@@ -25,6 +34,10 @@ public class Server {
     }
 
     public void start() {
+        if (this.hasStarted) {
+            return;
+        }
+        this.hasStarted = true;
         this.isRunning = true;
         Thread t = new Thread(new Runnable() {
             @Override public void run() {
@@ -45,6 +58,7 @@ public class Server {
                             ClientConnection client = new ClientConnection(Server.this, socket);
                             addClient(client);
                             client.start();
+                            client.send(welcome);
                         } catch (Exception e) {
                             log.error("Failed to setup client from {}", clientHost, e);
                             socket.close();
@@ -75,8 +89,14 @@ public class Server {
         isRunning = false;
     }
 
-    boolean handleMessage(ClientConnection client, JsonObject json) {
+    private int seqno;
+    boolean handleMessage(ClientConnection client, JsonObject json) throws IOException {
         log.info("from client {}: {}", client.getName(), json.toString());
+
+        JsonObject reply = new JsonObject();
+        reply.set("pong", ++seqno);
+        client.send(reply);
+
         return true;
     }
 
