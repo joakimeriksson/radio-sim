@@ -7,14 +7,13 @@ import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
 import com.eclipsesource.json.JsonObject;
 
-public class TestClient implements ClientHandler {
+public class TestEmulator implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
     private final ClientConnection clientConnection;
-    private int timeSetId = 0;
-    
-    public TestClient(String host, int port) throws IOException {
+
+    public TestEmulator(String host, int port) throws IOException {
         this.clientConnection = new ClientConnection(this, host, port);
         this.clientConnection.start();
     }
@@ -30,20 +29,17 @@ public class TestClient implements ClientHandler {
     
     private void serveForever() {
         long time = 0;
+        JsonObject reqNode = createCommand("node-config-set", new JsonObject().add("node-id", (int) (Math.random() * 10)));
+        try {
+            clientConnection.send(reqNode);
+        } catch (IOException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
         while (true) {
-            JsonObject timeReq = new JsonObject();
-            timeReq.add("command", "time-get");
             try {
                 Thread.sleep(5000);
-                clientConnection.send(timeReq);
-                time = time + 5;
-                JsonObject timeSet = createCommand("time-set", new JsonObject().add("time", time));
-                timeSet.set("id", timeSetId++);
-                clientConnection.send(timeSet);
             } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -52,6 +48,23 @@ public class TestClient implements ClientHandler {
     @Override
     public boolean handleMessage(ClientConnection clientConnection, JsonObject json) {
         System.out.println("RECV: " + json);
+        String cmd = json.getString("command", null);
+        JsonObject reply = new JsonObject();
+        long id = 0;
+        if ((id = json.getLong("id", -1)) != -1) {
+            reply.set("id", id);
+        }
+
+        if (cmd != null && cmd.equals("time-set")) {
+            System.out.println("Accepting time elapsed...");
+            reply.set("reply", "OK");
+            try {
+                clientConnection.send(reply);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
         return true;
     }
 
@@ -62,7 +75,7 @@ public class TestClient implements ClientHandler {
     }
 
     public static void main(String[] args) throws IOException {
-        TestClient c = new TestClient("127.0.0.1", 7711);
+        TestEmulator c = new TestEmulator("127.0.0.1", 7711);
         c.serveForever();
     }
 

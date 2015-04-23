@@ -31,7 +31,7 @@ public final class ClientConnection {
     private boolean isConnected;
     private boolean hasStarted;
     private Hashtable clientProperties = new Hashtable();
-    
+    private long emulationTime; /* if this is an emulator this will be updated to reflect how far this emulator reached */
 
     public ClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {
         this.clientHandler = clientHandler;
@@ -209,4 +209,11 @@ public final class ClientConnection {
         }
     }
 
+    public boolean setTime(long time) {
+        if (emulationTime < time) {
+            emulationTime = time;
+            return true;
+        }
+        return false;
+    }
 }
