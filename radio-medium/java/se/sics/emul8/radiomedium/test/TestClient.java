@@ -22,15 +22,22 @@ public class TestClient implements ClientHandler {
         return this.clientConnection;
     }
 
+    private JsonObject createCommand(String cmd, JsonObject params) {
+        JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("params", params);
+        return jsonCmd;
+    }
+    
     private void serveForever() {
+        long time = 0;
         while (true) {
             JsonObject timeReq = new JsonObject();
             timeReq.add("command", "time-get");
-            
             try {
                 Thread.sleep(5000);
-                
                 clientConnection.send(timeReq);
+                time = time + 5;
+                JsonObject timeSet = createCommand("time-set", new JsonObject().add("time", time));                
+                clientConnection.send(timeSet);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {

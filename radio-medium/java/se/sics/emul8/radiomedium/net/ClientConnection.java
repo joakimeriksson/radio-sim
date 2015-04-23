@@ -7,9 +7,12 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Hashtable;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.eclipsesource.json.JsonObject;
 
 public final class ClientConnection {
@@ -27,6 +30,8 @@ public final class ClientConnection {
     private String name;
     private boolean isConnected;
     private boolean hasStarted;
+    private Hashtable clientProperties = new Hashtable();
+    
 
     public ClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {
         this.clientHandler = clientHandler;
@@ -57,6 +62,14 @@ public final class ClientConnection {
         log.debug("{} client connected", this.name);
     }
 
+    public void setProperty(String name, Object value) {
+        clientProperties.put(name, value);
+    }
+    
+    public Object getProperty(String name) {
+        return clientProperties.get(name);
+    }
+    
     public String getName() {
         return name;
     }
