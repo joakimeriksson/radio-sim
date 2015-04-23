@@ -9,10 +9,8 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Hashtable;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.eclipsesource.json.JsonObject;
 
 public final class ClientConnection {
@@ -30,7 +28,7 @@ public final class ClientConnection {
     private String name;
     private boolean isConnected;
     private boolean hasStarted;
-    private Hashtable clientProperties = new Hashtable();
+    private Hashtable<String, Object> clientProperties = new Hashtable<String, Object>();
     private long emulationTime; /* if this is an emulator this will be updated to reflect how far this emulator reached */
 
     public ClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {

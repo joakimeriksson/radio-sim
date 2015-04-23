@@ -17,4 +17,10 @@ package se.sics.emul8.radiomedium;
  */
 public class UDGMRadioMedium extends AbstractRadioMedium {
 
+    @Override
+    public void transmit(RadioPacket packet) {
+        // TODO Auto-generated method stub
+
+    }
+
 }

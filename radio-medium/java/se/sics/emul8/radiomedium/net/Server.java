@@ -2,19 +2,17 @@ package se.sics.emul8.radiomedium.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import se.sics.emul8.radiomedium.Simulator;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
-
 import com.eclipsesource.json.JsonObject;
 
 public class Server implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
+    private Simulator simulator;
     private int port;
     private boolean hasStarted;
     private boolean isRunning;
@@ -30,6 +28,14 @@ public class Server implements ClientHandler {
 
         welcome = new JsonObject();
         welcome.set("radio-medium", rm);
+    }
+
+    public JsonObject getWelcomeMessage() {
+        return welcome;
+    }
+
+    public void setWelcomeMessage(JsonObject json) {
+        this.welcome = json;
     }
 
     public boolean isRunning() {
@@ -61,7 +67,9 @@ public class Server implements ClientHandler {
                             ClientConnection client = new ClientConnection(Server.this, socket);
                             addClient(client);
                             client.start();
-                            client.send(welcome);
+                            if (welcome != null) {
+                                client.send(welcome);
+                            }
                         } catch (Exception e) {
                             log.error("Failed to setup client from {}", clientHost, e);
                             socket.close();
@@ -92,15 +100,11 @@ public class Server implements ClientHandler {
         isRunning = false;
     }
 
-    private int seqno;
-
-    private Simulator simulator;
-
     @Override
     public boolean handleMessage(ClientConnection client, JsonObject json) {
         log.info("from client {}: {}", client.getName(), json.toString());
         if (simulator == null) {
-            System.out.println("Error - simulation not set...");
+            log.error("simulation not set...");
             return false;
         }
         return simulator.handleMessage(client, json);

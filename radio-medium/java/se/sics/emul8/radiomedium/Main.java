@@ -11,6 +11,9 @@ public class Main {
         }
 
         Simulator simulator = new Simulator();
+        RadioMedium radioMedium = new NullRadioMedium();
+        radioMedium.setSimulator(simulator);
+        simulator.setRadioMedium(radioMedium);
         Server server = new Server(DEFAULT_PORT);
         server.setSimulator(simulator);
         simulator.setServer(server);
