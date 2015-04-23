@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
 import com.eclipsesource.json.JsonObject;
 
-public class Server {
+public class Server implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
@@ -63,7 +63,7 @@ public class Server {
                             socket.close();
                         }
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.error("Server listen on port {} failed", port, e);
                 } finally {
                     log.info("Server stopped");
@@ -89,17 +89,24 @@ public class Server {
     }
 
     private int seqno;
-    boolean handleMessage(ClientConnection client, JsonObject json) throws IOException {
+
+    @Override
+    public boolean handleMessage(ClientConnection client, JsonObject json) {
         log.info("from client {}: {}", client.getName(), json.toString());
 
         JsonObject reply = new JsonObject();
         reply.set("pong", ++seqno);
-        client.send(reply);
+        try {
+            client.send(reply);
+        } catch (IOException e) {
+            log.error("failed to reply to client", e);
+        }
 
         return true;
     }
 
-    void clientClosed(ClientConnection client) {
+    @Override
+    public void clientClosed(ClientConnection client) {
         removeClient(client);
         log.debug("client from {} disconnected", client.getName());
     }

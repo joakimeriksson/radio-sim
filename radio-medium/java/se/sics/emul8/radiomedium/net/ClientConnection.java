@@ -3,6 +3,8 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -16,7 +18,9 @@ public final class ClientConnection {
     private static final byte[] NEW_LINE = "\r\n".getBytes(StandardCharsets.US_ASCII);
     private static final int MAX_PAYLOAD_SIZE = 20 * 1024 * 1024;
 
-    private Server server;
+    private static final int TIMEOUT = 10000;
+
+    private final ClientHandler clientHandler;
     private Socket socket;
     private OutputStream out;
     private BufferedInputStream in;
@@ -24,13 +28,31 @@ public final class ClientConnection {
     private boolean isConnected;
     private boolean hasStarted;
 
-    public ClientConnection(Server server, Socket socket) throws IOException {
-        this.server = server;
+    public ClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {
+        this.clientHandler = clientHandler;
         this.socket = socket;
         this.name = "[" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + ']';
 
         this.out = socket.getOutputStream();
         this.in = new BufferedInputStream(socket.getInputStream());
+        this.isConnected = true;
+        log.debug("{} client connected", this.name);
+    }
+
+    public ClientConnection(ClientHandler clientHandler, String host, int port) throws IOException {
+        InetAddress addr = InetAddress.getByName(host);
+        InetSocketAddress sockaddr = new InetSocketAddress(addr, port);
+
+        log.info("Connecting to {}:{}...", host, port);
+
+        this.socket = new Socket();
+        this.socket.connect(sockaddr, TIMEOUT);
+
+        this.clientHandler = clientHandler;
+        this.name = "[" + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + ']';
+
+        this.out = this.socket.getOutputStream();
+        this.in = new BufferedInputStream(this.socket.getInputStream());
         this.isConnected = true;
         log.debug("{} client connected", this.name);
     }
@@ -104,7 +126,7 @@ public final class ClientConnection {
                 // Assume type JSON for now
                 String jsonData = new String(data, StandardCharsets.UTF_8);
                 JsonObject json = JsonObject.readFrom(jsonData);
-                if (!server.handleMessage(this, json)) {
+                if (!clientHandler.handleMessage(this, json)) {
                     // This connection should no longer be kept alive
                     break;
                 }
@@ -121,7 +143,7 @@ public final class ClientConnection {
     public boolean send(JsonObject json, Map<String,String> attributes) throws IOException {
         OutputStream output = this.out;
         if (output != null) {
-            byte[] data = json.asString().getBytes(StandardCharsets.UTF_8);
+            byte[] data = json.toString().getBytes(StandardCharsets.UTF_8);
             output.write(Integer.toString(data.length).getBytes(StandardCharsets.US_ASCII));
             if (attributes != null && attributes.size() > 0) {
                 StringBuilder sb = new StringBuilder();
@@ -145,7 +167,7 @@ public final class ClientConnection {
         try {
             if (isDisconnecting) {
                 log.debug("{} disconnecting", getName());
-                server.clientClosed(this);
+                clientHandler.clientClosed(this);
             }
 
             if (out != null) {
