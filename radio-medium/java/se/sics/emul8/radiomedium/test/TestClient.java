@@ -24,9 +24,17 @@ public class TestClient implements ClientHandler {
 
     private void serveForever() {
         while (true) {
+            JsonObject timeReq = new JsonObject();
+            timeReq.add("command", "time-get");
+            
             try {
                 Thread.sleep(5000);
+                
+                clientConnection.send(timeReq);
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }

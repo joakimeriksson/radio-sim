@@ -10,7 +10,10 @@ public class Main {
             System.setProperty("logback.configurationFile", "logback.xml");
         }
 
+        Simulator simulator = new Simulator();
         Server server = new Server(DEFAULT_PORT);
+        server.setSimulator(simulator);
+        simulator.setServer(server);
         server.start();
 
         for (;;) {

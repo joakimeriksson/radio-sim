@@ -2,9 +2,13 @@ package se.sics.emul8.radiomedium.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import se.sics.emul8.radiomedium.Simulator;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
+
 import com.eclipsesource.json.JsonObject;
 
 public class Server implements ClientHandler {
@@ -90,24 +94,25 @@ public class Server implements ClientHandler {
 
     private int seqno;
 
+    private Simulator simulator;
+
     @Override
     public boolean handleMessage(ClientConnection client, JsonObject json) {
         log.info("from client {}: {}", client.getName(), json.toString());
-
-        JsonObject reply = new JsonObject();
-        reply.set("pong", ++seqno);
-        try {
-            client.send(reply);
-        } catch (IOException e) {
-            log.error("failed to reply to client", e);
+        if (simulator == null) {
+            System.out.println("Error - simulation not set...");
+            return false;
         }
-
-        return true;
+        return simulator.handleMessage(client, json);
     }
 
     @Override
     public void clientClosed(ClientConnection client) {
         removeClient(client);
         log.debug("client from {} disconnected", client.getName());
+    }
+
+    public void setSimulator(Simulator simulator) {
+        this.simulator = simulator;
     }
 }
