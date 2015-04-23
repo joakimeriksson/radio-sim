@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007, SICS AB.
+ * Copyright (c) 2015, SICS AB.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without

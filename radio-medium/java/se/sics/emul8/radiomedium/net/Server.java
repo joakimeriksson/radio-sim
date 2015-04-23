@@ -1,12 +1,11 @@
 package se.sics.emul8.radiomedium.net;
-
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.eclipsesource.json.JsonObject;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
+import com.eclipsesource.json.JsonObject;
 
 public class Server {
 
@@ -22,7 +21,7 @@ public class Server {
         this.port = port;
 
         JsonObject rm = new JsonObject();
-        rm.set("name", "Cooja radium medium");
+        rm.set("name", "Cooja radio medium");
         rm.set("api-version", "0.0.1");
 
         welcome = new JsonObject();
