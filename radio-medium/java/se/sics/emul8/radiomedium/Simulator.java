@@ -101,6 +101,8 @@ public class Simulator {
             } else {
                 reply.add("error", new JsonObject().add("desc", "only one time controller allowed"));
             }
+        } else if (command.equals("transmit")) {
+            /* Send along to all other nodes? */
         } else if (command.equals("node-config-set")) {
             /* add this client connection to the node emulator array */
             /* and possibly create a new node */

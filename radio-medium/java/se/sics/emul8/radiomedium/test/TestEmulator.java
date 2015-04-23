@@ -12,10 +12,13 @@ public class TestEmulator implements ClientHandler {
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
     private final ClientConnection clientConnection;
+    private int nodeId;
+    private long myTime;
 
     public TestEmulator(String host, int port) throws IOException {
         this.clientConnection = new ClientConnection(this, host, port);
         this.clientConnection.start();
+        nodeId = (int) (Math.random() * 10);
     }
 
     public ClientConnection getConnection() {
@@ -28,8 +31,11 @@ public class TestEmulator implements ClientHandler {
     }
     
     private void serveForever() {
-        long time = 0;
-        JsonObject reqNode = createCommand("node-config-set", new JsonObject().add("node-id", (int) (Math.random() * 10)));
+        JsonObject reqNode = createCommand("node-config-set", new JsonObject().add("node-id", nodeId));
+        JsonObject transmit = new JsonObject();
+        transmit.add("command", "transmit");
+        transmit.add("source-node-id", nodeId);
+        transmit.add("packet-data", "0102030405");
         try {
             clientConnection.send(reqNode);
         } catch (IOException e1) {
@@ -39,7 +45,12 @@ public class TestEmulator implements ClientHandler {
         while (true) {
             try {
                 Thread.sleep(5000);
+                transmit.set("time", myTime);
+                clientConnection.send(transmit);
             } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
         }
@@ -55,14 +66,21 @@ public class TestEmulator implements ClientHandler {
             reply.set("id", id);
         }
 
-        if (cmd != null && cmd.equals("time-set")) {
-            System.out.println("Accepting time elapsed...");
-            reply.set("reply", "OK");
-            try {
-                clientConnection.send(reply);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+        if (cmd != null) {
+            if (cmd.equals("time-set")) {
+                JsonObject params = (JsonObject) json.get("params"); 
+                myTime = params.getLong("time", 0);
+                System.out.println("Accepting time elapsed." + myTime);
+                reply.set("reply", "OK");
+                try {
+                    clientConnection.send(reply);
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            } else if (cmd.equals("transmit")) {
+                String destId = json.getString("destination-node-id", null);
+                System.out.println("Transmission for node: " + destId);
             }
         }
         return true;
