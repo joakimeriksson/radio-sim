@@ -1,5 +1,7 @@
 package se.sics.emul8.radiomedium;
 
+import javax.xml.bind.DatatypeConverter;
+
 import com.eclipsesource.json.JsonObject;
 
 public class RadioPacket {
@@ -44,6 +46,10 @@ public class RadioPacket {
 
     public String getPacketDataAsHex() {
         return packetData;
+    }
+    
+    public byte[] getPacketDataAsBytes() {
+        return DatatypeConverter.parseHexBinary(packetData);
     }
 
     public JsonObject toJsonDestination(Node destination, double rssi) {

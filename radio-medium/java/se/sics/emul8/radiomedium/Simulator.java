@@ -18,6 +18,9 @@ public class Simulator {
     private static final Node[] NO_NODES = new Node[0];
 
     private RadioMedium radioMedium;
+    
+    private RadioListener[] radioListeners = null;
+    
     private long time;
     private Server server;
     private ClientConnection timeController = null;
@@ -31,6 +34,19 @@ public class Simulator {
     private ConcurrentHashMap<String, Node> nodeTable = new ConcurrentHashMap<String, Node>();
     private Node[] nodes = NO_NODES;
 
+    public void addRadioListener(RadioListener listener) {
+        radioListeners = ArrayUtils.add(RadioListener.class, radioListeners, listener);
+    }
+    
+    private void notifyRadioListeners(RadioPacket packet) {
+        RadioListener[] listeners = radioListeners;
+        if (listeners != null) {
+            for(int i = 0; i < listeners.length; i++) {
+                listeners[i].packetTransmission(packet);
+            }
+        }
+    }
+    
     private void processAllEvents(long time) {
         /* process all the events in the event queue until time is time */
     }
@@ -220,6 +236,8 @@ public class Simulator {
                 if (value != null && value.isNumber()) {
                     packet.setWirelessChannel(value.asInt());
                 }
+                /* Send packet to listeners (visualizers, etc) and then to radio medium */
+                notifyRadioListeners(packet);
                 medium.transmit(packet);
                 reply.add("reply", "OK");
             }

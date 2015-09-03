@@ -1,6 +1,7 @@
 package se.sics.emul8.radiomedium;
 
 import se.sics.emul8.radiomedium.net.Server;
+import se.sics.emul8.radiomedium.util.PcapListener;
 
 public class Main {
     private static final int DEFAULT_PORT = 7711;
@@ -12,6 +13,8 @@ public class Main {
 
         Simulator simulator = new Simulator();
         RadioMedium radioMedium = new NullRadioMedium();
+        PcapListener pcapListener = new PcapListener();
+        simulator.addRadioListener(pcapListener);
         radioMedium.setSimulator(simulator);
         simulator.setRadioMedium(radioMedium);
         Server server = new Server(DEFAULT_PORT);
