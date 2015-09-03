@@ -17,10 +17,23 @@ package se.sics.emul8.radiomedium;
  */
 public class UDGMRadioMedium extends AbstractRadioMedium {
 
+    double range = 100.0; /* hundred meters range of the communication */
+
     @Override
     public void transmit(RadioPacket packet) {
-        // TODO Auto-generated method stub
-
+        Node[] nodes = simulator.getNodes();
+        double rssi = 0.0;
+        Node source = packet.getSource();
+        if (nodes != null) {
+            for (Node node : nodes) {
+                if (node != source) {
+                    double distance = source.getPosition().getDistance(node.getPosition());
+                    if(distance < range) {
+                      simulator.deliverRadioPacket(packet, node, rssi);
+                    }
+                }
+            }
+        }
     }
 
 }

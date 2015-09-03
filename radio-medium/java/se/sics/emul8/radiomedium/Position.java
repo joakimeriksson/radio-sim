@@ -18,4 +18,16 @@ public class Position {
         this.y = y;
         this.z = z;
     }
+
+
+    /* Calculate distance between two positions */
+    public double getDistance(Position p2) {
+        double dx = x - p2.x;
+        double dy = y - p2.y;
+        double dz = z - p2.z;
+        dx = dx * dx;
+        dy = dy * dy;
+        dz = dz * dz;
+        return Math.sqrt(dx + dy + dz);
+    }
 }
