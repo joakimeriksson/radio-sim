@@ -2,6 +2,7 @@ package se.sics.emul8.radiomedium.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.Simulator;
@@ -11,6 +12,8 @@ import com.eclipsesource.json.JsonObject;
 public class Server implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
+
+    private static final byte[] PROTOCOL_HEADER = "RSIM 1.0\r\n".getBytes(StandardCharsets.US_ASCII);
 
     private Simulator simulator;
     private int port;
@@ -65,6 +68,7 @@ public class Server implements ClientHandler {
                         log.debug("New client from {}", clientHost);
                         try {
                             ClientConnection client = new ClientConnection(Server.this, socket);
+                            client.sendRawData(PROTOCOL_HEADER);
                             addClient(client);
                             client.start();
                             if (welcome != null) {

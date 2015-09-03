@@ -27,6 +27,7 @@ public final class ClientConnection {
     private BufferedInputStream in;
     private String name;
     private boolean isConnected;
+    private boolean isWaitingForProtocolHeader;
     private boolean hasStarted;
     private Hashtable<String, Object> clientProperties = new Hashtable<String, Object>();
     private long emulationTime; /* if this is an emulator this will be updated to reflect how far this emulator reached */
@@ -56,6 +57,10 @@ public final class ClientConnection {
 
         this.out = this.socket.getOutputStream();
         this.in = new BufferedInputStream(this.socket.getInputStream());
+
+        // Connecting to server that should respond with a protocol header
+        this.isWaitingForProtocolHeader = true;
+
         this.isConnected = true;
         log.debug("{} client connected", this.name);
     }
@@ -74,6 +79,14 @@ public final class ClientConnection {
 
     public boolean isConnected() {
         return isConnected;
+    }
+
+    public void sendRawData(byte[] data) throws IOException {
+        OutputStream output = this.out;
+        if (output != null) {
+            output.write(data);
+            output.flush();
+        }
     }
 
     public void start() {
@@ -99,32 +112,96 @@ public final class ClientConnection {
     }
 
     protected void processInput(BufferedInputStream input) throws IOException {
-        StringBuilder sb = new StringBuilder();
+        boolean isParsingJSON = false;
+        boolean stuffed = false;
+        boolean quoted = false;
+        int brackets = 0;
 
         if (input == null) {
             return;
         }
 
+        StringBuilder sb = new StringBuilder();
         while (isConnected()) {
             int c = input.read();
             if (c < 0) {
                 close();
                 break;
             }
+
             if (c == '\r') {
                 // Ignore CR
                 continue;
             }
+
+            if (isParsingJSON) {
+                sb.append((char) c);
+
+                if (stuffed) {
+                    stuffed = false;
+                } else if (c == '\\') {
+                    stuffed = true;
+                } else if (quoted) {
+                    if (c == '"') {
+                        quoted = false;
+                    }
+                } else if (c == '"') {
+                    quoted = true;
+                } else if (c == '{') {
+                    brackets++;
+                } else if (c == '}') {
+                    brackets--;
+                    if (brackets == 0) {
+                        // log.debug("Read JSON: " + sb);
+                        JsonObject json = JsonObject.readFrom(sb.toString());
+                        sb.setLength(0);
+                        isParsingJSON = false;
+                        if (!clientHandler.handleMessage(this, json)) {
+                            // This connection should no longer be kept alive
+                            break;
+                        }
+                    }
+                }
+                continue;
+            }
+
             if (c == '\n') {
                 // End of line
                 String parameters = sb.toString();
+                sb.setLength(0);
+
+                if (isWaitingForProtocolHeader) {
+                    // TODO Verify protocol header.
+                    log.debug("server protocol version: " + parameters);
+                    if (!parameters.startsWith("RSIM ")) {
+                        throw new IOException("unsupported protocol: " + parameters);
+                    }
+                    isWaitingForProtocolHeader = false;
+                    continue;
+                }
+
                 String[] attrs = parameters.split(";");
                 int dataSize = Integer.parseInt(attrs[0]);
                 if (dataSize > MAX_PAYLOAD_SIZE) {
                     throw new IOException("too large payload: " + dataSize);
                 }
+
+                if (dataSize == 0) {
+                    // No data, only parameters
+                    continue;
+                }
+
+                if (dataSize < 0) {
+                    // No size specified. Assume JSON and read until end of JSON.
+                    // log.debug("No message size - assume JSON and read until end of JSON data");
+                    isParsingJSON = true;
+                    stuffed = false;
+                    quoted = false;
+                    brackets = 0;
+                    continue;
+                }
+
                 byte[] data = new byte[dataSize];
-                sb.setLength(0);
 
                 // Read all data
                 for (int i = 0, n = 0; i < dataSize; i += n) {
@@ -214,4 +291,5 @@ public final class ClientConnection {
         }
         return false;
     }
+
 }
