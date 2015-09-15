@@ -123,4 +123,9 @@ public class Server implements ClientHandler {
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
     }
+
+    public ClientConnection[] getClients() {
+        // TODO Auto-generated method stub
+        return clients;
+    }
 }

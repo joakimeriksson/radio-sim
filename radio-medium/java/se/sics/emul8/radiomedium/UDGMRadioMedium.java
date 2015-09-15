@@ -20,6 +20,12 @@ public class UDGMRadioMedium extends AbstractRadioMedium {
     double range = 100.0; /* hundred meters range of the communication */
 
     @Override
+    public String getName() {
+        // TODO Auto-generated method stub
+        return "UDGM Radio Medium";
+    }
+
+    @Override
     public void transmit(RadioPacket packet) {
         Node[] nodes = simulator.getNodes();
         double rssi = 0.0;
@@ -35,5 +41,7 @@ public class UDGMRadioMedium extends AbstractRadioMedium {
             }
         }
     }
+
+
 
 }

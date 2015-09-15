@@ -1,0 +1,78 @@
+package se.sics.emul8.web;
+
+import java.io.IOException;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+
+import se.sics.emul8.radiomedium.RadioMedium;
+import se.sics.emul8.radiomedium.Simulator;
+import se.sics.emul8.radiomedium.net.ClientConnection;
+
+public class WebServer extends AbstractHandler {
+
+    Server server;    
+    Simulator simulator;
+    
+    @Override
+    public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+        response.setContentType("text/html; charset=utf-8");
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.getWriter().println("<h1>Radio Medium Simulation</h1>");
+        
+        if (simulator != null) {
+            RadioMedium rm = simulator.getRadioMedium();
+            String name = rm.getName();
+            response.getWriter().println("Radio medium:" + name + "<br>");
+            
+            se.sics.emul8.radiomedium.net.Server srv = simulator.getServer();
+            ClientConnection[] clients = srv.getClients();
+            if(clients != null) {
+                response.getWriter().println("Clients: <ul>");
+                for(int i = 0; i < clients.length; i++) {
+                    response.getWriter().println("<li>" + clients[i].getName() + "<br>");
+                }
+                response.getWriter().println("</ul>");
+            } else {
+                response.getWriter().println("No clients connected.<br>");
+            }
+        } else {
+            response.getWriter().println("No simulator set<br>");
+        }
+        baseRequest.setHandled(true);
+    }
+    
+    public void setSimulator(Simulator simulator) {
+        // TODO Auto-generated method stub
+        this.simulator = simulator;
+    }
+
+    public void startWS() {
+        Runnable r = new Runnable() {
+            public void run() {
+                server = new Server(8080);
+                server.setHandler(WebServer.this);
+                try {
+                    System.out.println("Starting jetty web server at 8080");
+                    server.start();
+                    server.join();
+                } catch (Exception e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+        };
+        new Thread(r).start();
+    }
+    
+    public static void main(String[] args) throws Exception {
+        Server server = new Server(8080);
+        server.setHandler(new WebServer());
+        server.start();
+        server.join();
+    }
+
+}

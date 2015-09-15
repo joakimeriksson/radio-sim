@@ -3,15 +3,14 @@ package se.sics.emul8.radiomedium;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NullRadioMedium implements RadioMedium {
+public class NullRadioMedium extends AbstractRadioMedium {
 
     private static final Logger log = LoggerFactory.getLogger(NullRadioMedium.class);
 
-    protected Simulator simulator;
-
     @Override
-    public void setSimulator(Simulator sim) {
-        this.simulator = sim;
+    public String getName() {
+        // TODO Auto-generated method stub
+        return "Null radio medium - just forwards incoming packets to all other nodes";
     }
 
     @Override

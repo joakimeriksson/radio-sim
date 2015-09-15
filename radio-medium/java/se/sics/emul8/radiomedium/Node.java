@@ -20,7 +20,7 @@ public class Node {
     public Position getPosition() {
         return pos;
     }
-
+    
     public ClientConnection getClientConnection() {
         return this.clientConnection;
     }

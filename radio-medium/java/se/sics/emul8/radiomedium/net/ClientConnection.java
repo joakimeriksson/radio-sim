@@ -244,6 +244,7 @@ public final class ClientConnection {
             output.write(NEW_LINE);
             output.write(data);
             output.flush();
+            System.out.println("Data:'" + new String(data) + "'" + " len:" + data.length);
             return true;
         }
         return false;
