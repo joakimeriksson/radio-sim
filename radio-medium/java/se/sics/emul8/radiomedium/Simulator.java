@@ -253,7 +253,7 @@ public class Simulator {
                 JsonArray position = value.asArray();
                 if (position.size() > 2) {
                     node.getPosition().set(position.get(0).asDouble(), position.get(1).asDouble(),
-                            position.get(3).asDouble());
+                            position.get(2).asDouble());
                 } else if (position.size() > 1) {
                     node.getPosition().set(position.get(0).asDouble(), position.get(1).asDouble());
                 }

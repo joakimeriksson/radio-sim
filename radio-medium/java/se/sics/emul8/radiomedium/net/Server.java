@@ -31,6 +31,7 @@ public class Server implements ClientHandler {
 
         welcome = new JsonObject();
         welcome.set("radio-medium", rm);
+        welcome.set("status", "OK");
     }
 
     public JsonObject getWelcomeMessage() {

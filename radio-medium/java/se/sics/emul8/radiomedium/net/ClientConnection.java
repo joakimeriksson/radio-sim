@@ -169,6 +169,9 @@ public final class ClientConnection {
                 // End of line
                 String parameters = sb.toString();
                 sb.setLength(0);
+                if(parameters.trim().length() == 0) {
+                    continue;
+                }
 
                 if (isWaitingForProtocolHeader) {
                     // TODO Verify protocol header.
