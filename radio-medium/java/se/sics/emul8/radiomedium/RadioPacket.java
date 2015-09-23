@@ -1,7 +1,6 @@
 package se.sics.emul8.radiomedium;
 
 import javax.xml.bind.DatatypeConverter;
-
 import com.eclipsesource.json.JsonObject;
 
 public class RadioPacket {
@@ -54,7 +53,7 @@ public class RadioPacket {
 
     public JsonObject toJsonDestination(Node destination, double rssi) {
         JsonObject json = new JsonObject();
-        json.add("command", "transmit");
+        json.add("command", "receive");
         json.add("destination-node-id", destination.getId());
         json.add("time", this.time);
         json.add("receive-strength", rssi);
