@@ -41,7 +41,4 @@ public class UDGMRadioMedium extends AbstractRadioMedium {
             }
         }
     }
-
-
-
 }
