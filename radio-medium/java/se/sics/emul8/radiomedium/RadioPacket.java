@@ -46,8 +46,8 @@ public class RadioPacket {
     public RadioPacket(Node node, long time, String packetData) {
         this.node = node;
         this.time = time;
-        this.txpower = node.getTransmitPower();
-        this.channel = node.getWirelessChannel();
+        this.txpower = node.getRadio().getTransmitPower();
+        this.channel = node.getRadio().getWirelessChannel();
         this.packetData = packetData;
     }
 

@@ -48,6 +48,7 @@ public class Server implements ClientHandler {
     private static final byte[] PROTOCOL_HEADER = "RSIM 1.0\r\n".getBytes(StandardCharsets.US_ASCII);
 
     private Simulator simulator;
+    private SimulatorJSONHandler simulatorJSONHandler;
     private int port;
     private boolean hasStarted;
     private boolean isRunning;
@@ -144,7 +145,7 @@ public class Server implements ClientHandler {
             log.error("simulation not set...");
             return false;
         }
-        return simulator.handleMessage(client, json);
+        return simulatorJSONHandler.handleMessage(client, json);
     }
 
     @Override
@@ -155,6 +156,7 @@ public class Server implements ClientHandler {
 
     public void setSimulator(Simulator simulator) {
         this.simulator = simulator;
+        simulatorJSONHandler = new SimulatorJSONHandler(simulator);
     }
 
     public ClientConnection[] getClients() {

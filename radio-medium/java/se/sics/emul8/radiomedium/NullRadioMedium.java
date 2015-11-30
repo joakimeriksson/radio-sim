@@ -59,7 +59,10 @@ public class NullRadioMedium extends AbstractRadioMedium {
         if (nodes != null) {
             for (Node node : nodes) {
                 if (node != packet.getSource()) {
-                    simulator.deliverRadioPacket(packet, node, rssi);
+                    /* Just send if they are on same channel - no loss - no collissions - infinite range */
+                    if(node.getRadio().getWirelessChannel() == packet.getWirelessChannel()) {
+                        simulator.deliverRadioPacket(packet, node, rssi);
+                    }
                 }
             }
         }

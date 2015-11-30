@@ -33,16 +33,20 @@
 package se.sics.emul8.radiomedium;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 
+/* TODO: make the node have option to support multiple interfaces and not
+ * only 802.15.4 style radio.
+ */
 public class Node {
 
     private final String id;
     private final Position pos = new Position();
-    private double txpower = 0.0;
-    private int wirelessChannel = 26;
+    private Transciever radio;
+
     private ClientConnection clientConnection;
 
     public Node(String id) {
         this.id = id;
+        radio = new Transciever();
     }
 
     public String getId() {
@@ -61,20 +65,7 @@ public class Node {
         this.clientConnection = cc;
     }
 
-    public double getTransmitPower() {
-        return this.txpower;
+    public Transciever getRadio() {
+        return radio;
     }
-
-    public void setTransmitPower(double txpower) {
-        this.txpower = txpower;
-    }
-
-    public int getWirelessChannel() {
-        return wirelessChannel;
-    }
-
-    public void setWirelessChannel(int wirelessChannel) {
-        this.wirelessChannel = wirelessChannel;
-    }
-
 }

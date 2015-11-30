@@ -45,6 +45,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.eclipsesource.json.JsonObject;
 
+import se.sics.emul8.radiomedium.Node;
+import se.sics.emul8.radiomedium.RadioPacket;
+
 public final class ClientConnection {
 
     private static final Logger log = LoggerFactory.getLogger(ClientConnection.class);
@@ -326,6 +329,26 @@ public final class ClientConnection {
             return true;
         }
         return false;
+    }
+
+    /* called when the time in the simulator has stepped to the desired time */
+    public void timeStepDone(long timeId) {
+        try {
+            send(new JsonObject().add("reply", "OK").add("id", timeId));
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
+
+    public void sendPacket(RadioPacket packet, Node destination, long id, double rssi) {
+        JsonObject json = packet.toJsonDestination(destination, rssi);
+        json.add("id", id);
+        try {
+            send(json);
+        } catch (IOException e) {
+            log.error("failed to deliver radio packet to node {}", destination.getId(), e);
+        }
     }
 
 }
