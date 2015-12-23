@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="java"/>
+	<classpathentry kind="lib" path="lib/emul8-radio-medium.jar" sourcepath="/radio-medium/java"/>
+	<classpathentry kind="lib" path="lib/jipv6.jar"/>
+	<classpathentry kind="lib" path="lib/mspsim.jar" sourcepath="/mspsim"/>
+	<classpathentry kind="lib" path="mspsim-emulink.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="out"/>
+</classpath>

@@ -1,0 +1,83 @@
+<project name="MSPSim-EmuLink" default="jar" basedir=".">
+  <description>
+     Builds MSPSim EmuLink
+  </description>
+
+  <property name="src" location="java"/>
+  <property name="build" location="build"/>
+  <property name="lib" location="lib"/>
+  <property name="jarfile" location="mspsim-emulink.jar"/>
+  <property name="mspsim" location="../mspsim"/>
+  <property name="mspsim_jar" value="${mspsim}/mspsim.jar"/>
+  <property name="radiosim" location="../radio-medium"/>
+  <property name="radiosim_jar" value="${radiosim}/emul8-radio-medium.jar"/>
+  <property name="javac.debug" value="true"/>
+  <property name="ant.build.javac.source" value="1.7"/>
+  <property name="ant.build.javac.target" value="1.7"/>
+
+  <target name="init">
+    <tstamp/>
+    <mkdir dir="${lib}"/>
+    <mkdir dir="${build}"/>
+  </target>
+
+  <target name="mspsim" depends="init">
+  	<fail>-
+----------------
+Could not find the MSPSim build file. Did you run &quot;git submodule update --init&quot;?
+----------------
+  	    <condition><not>
+  	      <available file="${mspsim}/build.xml" />
+  	    </not></condition>
+  	</fail>
+    <ant antfile="build.xml" dir="${mspsim}" target="jar" inheritAll="false"/>
+    <copy todir="${lib}" file="${mspsim_jar}" />
+    <copy todir="${lib}" file="${mspsim}/lib/jipv6.jar" />
+    <copy todir="${lib}" file="${mspsim}/lib/jcommon-1.0.14.jar" />
+    <copy todir="${lib}" file="${mspsim}/lib/jfreechart-1.0.11.jar" />
+  </target>
+
+  <target name="radiosim" depends="init">
+    <ant antfile="build.xml" dir="${radiosim}" target="jar" inheritAll="false"/>
+    <copy todir="${lib}">
+        <fileset file="${radiosim_jar}"/>
+        <fileset dir="${radiosim}/lib" includes="**/*.jar"/>
+    </copy>
+  </target>
+
+  <target name="compile" depends="init,mspsim,radiosim" description="compile the source">
+    <javac srcdir="${src}" destdir="${build}"
+           debug="${javac.debug}" includeantruntime="false">
+      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-deprecation"/>
+      <classpath>
+        <pathelement location="${mspsim_jar}"/>
+        <pathelement location="${radiosim_jar}"/>
+      </classpath>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile" description="generate jar file" >
+    <path id="classpath">
+      <fileset dir="${lib}" includes="**/*.jar"/>
+    </path>
+
+    <manifestclasspath property="jar.classpath" jarfile="${jarfile}">
+      <classpath refid="classpath" />
+    </manifestclasspath>
+
+    <jar jarfile="${jarfile}" basedir="${build}">
+      <manifest>
+        <attribute name="Main-Class" value="se.sics.emul8.mspsim.EmuLink"/>
+      	<attribute name="Class-Path" value="${jar.classpath}" />
+      </manifest>
+    </jar>
+  </target>
+
+  <target name="clean" description="clean up" >
+    <delete dir="${build}"/>
+    <delete dir="${lib}"/>
+    <delete file="${jarfile}" />
+  </target>
+
+</project>
