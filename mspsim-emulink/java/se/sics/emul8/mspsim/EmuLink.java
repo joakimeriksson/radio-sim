@@ -6,11 +6,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
+import se.sics.mspsim.core.USARTListener;
+import se.sics.mspsim.core.USARTSource;
+import se.sics.mspsim.core.MSP430Config.UARTConfig;
+import se.sics.mspsim.core.USART;
 import se.sics.mspsim.platform.GenericNode;
 import se.sics.mspsim.util.ArgumentManager;
+import se.sics.mspsim.util.ComponentRegistry;
+
 import com.eclipsesource.json.JsonObject;
 
-public class EmuLink implements ClientHandler {
+public class EmuLink implements ClientHandler, USARTListener {
 
     private static final Logger log = LoggerFactory.getLogger(EmuLink.class);
 
@@ -26,7 +32,7 @@ public class EmuLink implements ClientHandler {
     private long timeId;
     private volatile boolean isWaitingForTimeReply;
     private long controllerTime;
-
+    
     public EmuLink(String host, int port, boolean isTimeController, GenericNode node) throws IOException {
         this.clientConnection = new ClientConnection(this, host, port);
         this.node = node;
@@ -177,8 +183,27 @@ public class EmuLink implements ClientHandler {
         }
         boolean isTimeController = config.getPropertyAsBoolean("timectrl", false);
         node.setupArgs(config);
+        
         EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController, node);
+
+        ComponentRegistry r = node.getRegistry();
+        USART uart = r.getComponent(USART.class);
+        if (uart != null) {
+            uart.addUSARTListener(c);
+        }
+        
         c.serveForever();
     }
 
+
+    static StringBuffer sbuf = new StringBuffer();
+    @Override
+    public void dataReceived(USARTSource source, int data) {
+        // Receive and printout UART data. 
+        sbuf.append((char) data);
+        if(data == '\n') {
+            System.out.println("UART Data:" + sbuf.toString());
+            sbuf.setLength(0);
+        }
+    }
 }
