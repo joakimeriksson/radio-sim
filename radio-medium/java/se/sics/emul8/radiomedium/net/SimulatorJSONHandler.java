@@ -105,6 +105,16 @@ public class SimulatorJSONHandler {
                 reply.add("reply", "OK");
             }
 
+        } else if (command.equals("log")) {
+            reply.add("reply", "OK");
+            JsonObject params = json.get("params").asObject();
+            String nodeId = "" + params.get("node-id").asInt();
+            String logMsg = params.get("message").asString();
+            Node node = simulator.getNode(nodeId);
+            if(logMsg != null) {
+                node.log(logMsg);
+            }
+            log.debug("Node:" + nodeId + " logMsg:" + logMsg);
         } else if (command.equals("node-config-set")) {
             /* add this client connection to the node emulator array */
             /* and possibly create a new node */

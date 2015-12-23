@@ -110,9 +110,13 @@ public class TestEmulator implements ClientHandler {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
+                clientConnection.sendLogMsg(nodeId, "Accepted time elapse to " + myTime);
             } else if (cmd.equals("transmit")) {
                 String destId = json.getString("destination-node-id", null);
                 System.out.println("Transmission for node: " + destId);
+                if (("" + nodeId).equals(destId)) {
+                    clientConnection.sendLogMsg(nodeId, "Got message to me!");
+                }
             }
         }
         return true;

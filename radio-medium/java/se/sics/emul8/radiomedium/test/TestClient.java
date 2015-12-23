@@ -66,9 +66,9 @@ public class TestClient implements ClientHandler {
             JsonObject timeReq = new JsonObject();
             timeReq.add("command", "time-get");
             try {
-                Thread.sleep(5000);
+                Thread.sleep(1000);
                 clientConnection.send(timeReq);
-                time = time + 5;
+                time = time + 1000000;
                 JsonObject timeSet = createCommand("time-set", new JsonObject().add("time", time));
                 timeSet.set("id", timeSetId++);
                 clientConnection.send(timeSet);

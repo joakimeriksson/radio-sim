@@ -55,6 +55,8 @@ public final class ClientConnection {
     private static final int MAX_PAYLOAD_SIZE = 20 * 1024 * 1024;
 
     private static final int TIMEOUT = 10000;
+    
+    private boolean useLength = true; /* Set to false if no line with len and attributes is to be sent */
 
     private final ClientHandler clientHandler;
     private Socket socket;
@@ -163,7 +165,9 @@ public final class ClientConnection {
                 close();
                 break;
             }
-
+            if (c == '{' && !isParsingJSON) {
+                isParsingJSON = true;
+            }
             if (c == '\r') {
                 // Ignore CR
                 continue;
@@ -191,6 +195,7 @@ public final class ClientConnection {
                         JsonObject json = JsonObject.readFrom(sb.toString());
                         sb.setLength(0);
                         isParsingJSON = false;
+                        log.debug("JSON without len recived.");
                         if (!clientHandler.handleMessage(this, json)) {
                             // This connection should no longer be kept alive
                             break;
@@ -270,18 +275,23 @@ public final class ClientConnection {
         OutputStream output = this.out;
         if (output != null) {
             byte[] data = json.toString().getBytes(StandardCharsets.UTF_8);
-            output.write(Integer.toString(data.length).getBytes(StandardCharsets.US_ASCII));
-            if (attributes != null && attributes.size() > 0) {
-                StringBuilder sb = new StringBuilder();
-                for (String key : attributes.keySet()) {
-                    String value = attributes.get(key);
-                    sb.append(';').append(key).append('=').append(value);
+            if(useLength) {
+                output.write(Integer.toString(data.length).getBytes(StandardCharsets.US_ASCII));
+                if (attributes != null && attributes.size() > 0) {
+                    StringBuilder sb = new StringBuilder();
+                    for (String key : attributes.keySet()) {
+                        String value = attributes.get(key);
+                        sb.append(';').append(key).append('=').append(value);
+                    }
+                    output.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
                 }
-                output.write(sb.toString().getBytes(StandardCharsets.US_ASCII));
+                output.write(NEW_LINE);
+                output.write(data);
+                output.flush();
+            } else {
+                output.write(data);
+                output.write(NEW_LINE);
             }
-            output.write(NEW_LINE);
-            output.write(data);
-            output.flush();
             System.out.println("Data:'" + new String(data) + "'" + " len:" + data.length);
             return true;
         }
@@ -349,6 +359,20 @@ public final class ClientConnection {
         } catch (IOException e) {
             log.error("failed to deliver radio packet to node {}", destination.getId(), e);
         }
+    }
+
+    public boolean sendLogMsg(int nodeId, String string) {
+        JsonObject json = new JsonObject();
+        json.add("command", "log");
+        json.add("params", new JsonObject().add("node-id", nodeId).add("message", string));
+        log.debug("Sending log msg:" + string);
+        try {
+            send(json);
+            return true; /* success */
+        } catch (IOException e) {
+            log.error("failed to log message from node {}", nodeId, e);
+        }
+        return false; /* failed */
     }
 
 }

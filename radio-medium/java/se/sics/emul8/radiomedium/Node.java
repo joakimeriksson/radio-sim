@@ -68,4 +68,8 @@ public class Node {
     public Transciever getRadio() {
         return radio;
     }
+
+    public void log(String logMsg) {
+        /* The node produce some log message... */
+    }
 }
