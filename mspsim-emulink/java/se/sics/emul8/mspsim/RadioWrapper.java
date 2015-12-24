@@ -26,6 +26,7 @@ public class RadioWrapper implements RFListener {
     }
 
     public void packetReceived(byte[] receivedData) {
+        System.out.println("WRadio: byte[] packet received: no-bytes:" + receivedData.length);
         // four zero bytes, 7a and then length...
         radio.receivedByte((byte)0);
         radio.receivedByte((byte)0);
@@ -43,10 +44,34 @@ public class RadioWrapper implements RFListener {
         }
     }
 
+    int getHexValue(char c) {
+        if(c >= '0' && c <= '9') {
+            return c - '0';
+        }
+        if(c >= 'A' && c <= 'F') {
+            return c - 'A' + 10;
+        }
+        if(c >= 'a' && c <= 'f') {
+            return c - 'a' + 10;
+        }
+        return 0;
+    }
+    
+    public void packetReceived(String data) {
+        System.out.println("WRadio: Packet received: " + data);
+        int len = data.length();
+        byte[] packet = new byte[len / 2];
+        for(int i = 0; i < len; i += 2) {
+            packet[i / 2] =  (byte) ((getHexValue(data.charAt(i)) << 4) | (getHexValue(data.charAt(i + 1))));
+            System.out.printf("Data: %02x\n", packet[i/2] & 0xff);
+        }
+        packetReceived(packet);
+    }
+
     // NOTE: len is not in the packet for now...
     public void receivedByte(byte data) {
         PacketListener listener = this.packetListener;
-//        System.out.printf("*** RF Data :%d $%02x %c", data, data, (char)data);
+        //System.out.printf("*** RF Data :%d $%02x %c", data, data, (char)data);
         if (pos == 5) {
             len = data;
         }

@@ -35,6 +35,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
     private long timeId;
     private volatile boolean isWaitingForTimeReply;
     private long controllerTime;
+    private RadioWrapper wradio;
     
     public EmuLink(String host, int port, boolean isTimeController, GenericNode node) throws IOException {
         this.clientConnection = new ClientConnection(this, host, port);
@@ -63,7 +64,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         clientConnection.send(reqNode);
     }
 
-    char hex[] = "0123456789ABCFED".toCharArray();
+    char hex[] = "0123456789ABCDEF".toCharArray();
     private String hex(int i) {
         String s;
         i = i & 0xff;
@@ -154,11 +155,12 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-            } else if (cmd.equals("transmit")) {
+            } else if (cmd.equals("transmit") || cmd.equals("receive")) {
                 String destId = json.getString("destination-node-id", null);
-                System.out.println("Transmission for node: " + destId);
                 /* all packets should go into the radio? */
-                
+                String data = json.getString("packet-data", null);
+                System.out.println("Transmission for node: " + destId + " " + data);
+                wradio.packetReceived(data);
             }
         }
         return true;
@@ -242,8 +244,8 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         radio.setRSSI(-100); /* needed to set the CCA to 1 */
         if(radio != null) {
             System.out.println("*** Installing radio listener...");
-            RadioWrapper wradio = new RadioWrapper(radio);
-            wradio.addPacketListener(c);
+            c.wradio = new RadioWrapper(radio);
+            c.wradio.addPacketListener(c);
             radio.addOperatingModeListener(new OperatingModeListener() {
                 public void modeChanged(Chip arg0, int arg1) {
 //                    System.out.println("Radio mode changed:" + arg1);
