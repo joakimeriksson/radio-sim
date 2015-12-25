@@ -140,6 +140,9 @@ public class SimulatorJSONHandler {
                 node.getRadio().setWirelessChannel(value.asInt());
             }
             reply.add("reply", "OK");
+        } else if (command.equals("subscribe-event")) {
+            log.debug("Adding clienct connection as event listener");
+            simulator.addEventListener(client);
         } else {
             /* What did we get here ??? */
             reply.add("error", new JsonObject().add("desc", "unhandled message."));

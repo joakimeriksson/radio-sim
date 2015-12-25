@@ -58,6 +58,7 @@ public class Simulator {
     private Server server;
     private ClientConnection timeController = null;
     private ClientConnection[] emulators;
+    private ClientConnection[] eventListeners;
     private int emulatorsLeft = 0;
     private long lastTimeId = -1;
     private long waitingForTimeId = -1;
@@ -82,9 +83,12 @@ public class Simulator {
     public long getTime() {
         return time;
     }
+    
+    public void addEventListener(ClientConnection client) {
+        this.eventListeners = ArrayUtils.add(ClientConnection.class, this.eventListeners, client);
+    }
 
     public ClientConnection[] getEmulators() {
-        // TODO Auto-generated method stub
         return emulators;
     }
 
@@ -184,7 +188,7 @@ public class Simulator {
                 this.emulators = ArrayUtils.add(ClientConnection.class, this.emulators, client);
             }
 
-            node = new Node(nodeId);
+            node = new Node(nodeId, this);
             node.setClientConnection(client);
             this.nodeTable.put(nodeId, node);
             this.nodes = ArrayUtils.add(Node.class, this.nodes, node);
@@ -225,6 +229,14 @@ public class Simulator {
         return node;
     }
 
+    public void deliverEvent(SimulationEvent event) {
+        ClientConnection[] listeners = eventListeners;
+        if (listeners != null) {
+            for (int i = 0; i < listeners.length; i++) {
+                listeners[i].sendEvent(event);
+            }
+        }
+    }
  
     public void deliverRadioPacket(RadioPacket packet, Node destination, double rssi) {
         ClientConnection cc = destination.getClientConnection();

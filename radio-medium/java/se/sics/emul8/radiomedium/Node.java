@@ -41,12 +41,13 @@ public class Node {
     private final String id;
     private final Position pos = new Position();
     private Transciever radio;
-
+    private Simulator sim;
     private ClientConnection clientConnection;
 
-    public Node(String id) {
+    public Node(String id, Simulator sim) {
         this.id = id;
         radio = new Transciever();
+        this.sim = sim;
     }
 
     public String getId() {
@@ -71,5 +72,8 @@ public class Node {
 
     public void log(String logMsg) {
         /* The node produce some log message... */
+        SimulationEvent event = new SimulationEvent(SimulationEvent.EventType.LOG_MESSAGE, sim.getTime(), this);
+        event.setData("logMessage", logMsg);
+        sim.deliverEvent(event);
     }
 }

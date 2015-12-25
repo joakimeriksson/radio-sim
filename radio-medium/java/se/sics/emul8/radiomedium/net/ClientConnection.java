@@ -47,7 +47,9 @@ import com.eclipsesource.json.JsonObject;
 
 import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.RadioPacket;
+import se.sics.emul8.radiomedium.SimulationEvent;
 
+/* TODO: Refactor so that this do not contain any JSON */
 public final class ClientConnection {
 
     private static final Logger log = LoggerFactory.getLogger(ClientConnection.class);
@@ -375,4 +377,36 @@ public final class ClientConnection {
         return false; /* failed */
     }
 
+    public void sendEvent(SimulationEvent event) {
+        JsonObject eventData = null;
+        String type = null;
+        String source = "";
+        switch(event.getType()) {
+        case LOG_MESSAGE:
+            type = "log";
+            source = event.getSource().getId();
+            eventData = new JsonObject();
+            eventData.add("logMessage", (String) event.getData("logMessage"));
+            break;
+        default:
+            /* ignore others for now */
+            break;
+        }
+        if (eventData != null) {
+            JsonObject json = new JsonObject();
+            JsonObject eventObject = new JsonObject();
+            eventObject.add("time", event.getTime());
+            eventObject.add("type", type);
+            eventObject.add("source", source);
+            eventObject.add("event-data", eventData);
+            json.add("event", eventObject);
+            json.add("id", 0);
+            try {
+                send(json);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
+    }
 }
