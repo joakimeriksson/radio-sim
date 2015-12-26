@@ -58,12 +58,12 @@ public class RadioWrapper implements RFListener {
     }
     
     public void packetReceived(String data) {
-        System.out.println("WRadio: Packet received: " + data);
+//        System.out.println("WRadio: Packet received: " + data);
         int len = data.length();
         byte[] packet = new byte[len / 2];
         for(int i = 0; i < len; i += 2) {
             packet[i / 2] =  (byte) ((getHexValue(data.charAt(i)) << 4) | (getHexValue(data.charAt(i + 1))));
-            System.out.printf("Data: %02x\n", packet[i/2] & 0xff);
+//            System.out.printf("Data: %02x\n", packet[i/2] & 0xff);
         }
         packetReceived(packet);
     }

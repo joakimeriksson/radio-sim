@@ -101,7 +101,7 @@ public class Server implements ClientHandler {
                         String clientHost = socket.getInetAddress().getHostAddress();
                         log.debug("New client from {}", clientHost);
                         try {
-                            ClientConnection client = new ClientConnection(Server.this, socket);
+                            JSONClientConnection client = new JSONClientConnection(Server.this, socket);
                             client.sendRawData(PROTOCOL_HEADER);
                             addClient(client);
                             client.start();

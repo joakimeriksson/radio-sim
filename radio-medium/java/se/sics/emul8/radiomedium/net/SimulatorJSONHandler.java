@@ -55,14 +55,14 @@ public class SimulatorJSONHandler {
                     } else {
                         // Allocate new sequence number for the command
                         simulator.stepTime(time, id);
-                        json = new JsonObject();
-                        json.add("command", "time-set");
-                        json.add("id", simulator.getLastTimeId());
-                        json.add("params", new JsonObject().add("time", time));
-                        
-                        for (ClientConnection emu : emulators) {
-                            emu.send(json);
-                        }
+//                        json = new JsonObject();
+//                        json.add("command", "time-set");
+//                        json.add("id", simulator.getLastTimeId());
+//                        json.add("params", new JsonObject().add("time", time));
+//                        
+//                        for (ClientConnection emu : emulators) {
+//                            emu.send(json);
+//                        }
                         /* handle the time elapsed here */
                         /* -- send a set-time to all with nodes and set the emulatorsLeft to the number of connected emulator */
                         /* -- collect all transmissions, and node/radio-changes in the event Q */
@@ -149,8 +149,9 @@ public class SimulatorJSONHandler {
         }
 
         try {
+            /* Send a JSON reply - hopefully it is JSON */
             if (reply != null) {
-                client.send(reply);
+                ((JSONClientConnection) client).send(reply);
             }
         } catch (IOException e) {
             log.error("failed to reply to client", e);

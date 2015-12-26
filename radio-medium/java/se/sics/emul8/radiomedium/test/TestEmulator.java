@@ -37,18 +37,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
+import se.sics.emul8.radiomedium.net.JSONClientConnection;
+
 import com.eclipsesource.json.JsonObject;
 
 public class TestEmulator implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
-    private final ClientConnection clientConnection;
+    private final JSONClientConnection clientConnection;
     private int nodeId;
     private long myTime;
 
     public TestEmulator(String host, int port) throws IOException {
-        this.clientConnection = new ClientConnection(this, host, port);
+        this.clientConnection = new JSONClientConnection(this, host, port);
         this.clientConnection.start();
         nodeId = (int) (Math.random() * 10);
     }
@@ -105,17 +107,17 @@ public class TestEmulator implements ClientHandler {
                 System.out.println("Accepting time elapsed." + myTime);
                 reply.set("reply", "OK");
                 try {
-                    clientConnection.send(reply);
+                    ((JSONClientConnection)clientConnection).send(reply);
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
-                clientConnection.sendLogMsg(nodeId, "Accepted time elapse to " + myTime);
+                ((JSONClientConnection)clientConnection).sendLogMsg(nodeId, "Accepted time elapse to " + myTime);
             } else if (cmd.equals("transmit")) {
                 String destId = json.getString("destination-node-id", null);
                 System.out.println("Transmission for node: " + destId);
                 if (("" + nodeId).equals(destId)) {
-                    clientConnection.sendLogMsg(nodeId, "Got message to me!");
+                    ((JSONClientConnection)clientConnection).sendLogMsg(nodeId, "Got message to me!");
                 }
             }
         }

@@ -44,7 +44,8 @@ import se.sics.emul8.radiomedium.util.ArrayUtils;
 public class Simulator {
 
     private static final Logger log = LoggerFactory.getLogger(Simulator.class);
-
+    public static final int DEFAULT_PORT = 7711; /* for the JSON protocol */
+    
     private static final Node[] NO_NODES = new Node[0];
 
     /* Responses, etc from emulators */
@@ -95,7 +96,7 @@ public class Simulator {
     public void emulatorTimeStepped(ClientConnection client, long id, long timeStepOk) {
         if(id == waitingForTimeId) {
             /* should also check for this specific clients "ack" */
-            if (client.setTime(time)) {
+            if (client.setTime(time, id)) {
                 emulatorsLeft--;
             } else {
               /* What to do here? */
@@ -117,7 +118,17 @@ public class Simulator {
     public void stepTime(long time, long id) {
         waitingForTimeId = simulatorMessageId.incrementAndGet();
         lastTimeId = id;
+        if (emulators == null) {
+            emulatorsLeft = 0;
+            return;
+        }
         emulatorsLeft = emulators.length;
+
+        /* inform all emulators about the time stepping */
+        ClientConnection[] em = emulators;
+        for (int i = 0; i < em.length; i++) {
+            em[i].emulateToTime(time, id);
+        }
     }
 
     public long getLastTimeId() {

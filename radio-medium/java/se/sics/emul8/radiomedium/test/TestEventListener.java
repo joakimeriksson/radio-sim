@@ -37,6 +37,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
+import se.sics.emul8.radiomedium.net.JSONClientConnection;
+
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 
@@ -44,10 +46,10 @@ public class TestEventListener implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
-    private final ClientConnection clientConnection;
+    private final JSONClientConnection clientConnection;
 
     public TestEventListener(String host, int port) throws IOException {
-        this.clientConnection = new ClientConnection(this, host, port);
+        this.clientConnection = new JSONClientConnection(this, host, port);
         this.clientConnection.start();
     }
 

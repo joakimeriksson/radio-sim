@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
+import se.sics.emul8.radiomedium.net.JSONClientConnection;
 import se.sics.mspsim.core.USARTListener;
 import se.sics.mspsim.core.USARTSource;
 import se.sics.mspsim.chip.PacketListener;
@@ -26,7 +27,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
     private static final int DEFAULT_PORT = 7711;
     private static final long DURATION = 1000;
 
-    private final ClientConnection clientConnection;
+    private final JSONClientConnection clientConnection;
     private final GenericNode node;
     private final boolean isTimeController;
     private int nodeId;
@@ -38,7 +39,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
     private RadioWrapper wradio;
     
     public EmuLink(String host, int port, boolean isTimeController, GenericNode node) throws IOException {
-        this.clientConnection = new ClientConnection(this, host, port);
+        this.clientConnection = new JSONClientConnection(this, host, port);
         this.node = node;
         this.isTimeController = isTimeController;
         this.nodeId = (int) (Math.random() * 10);
@@ -150,7 +151,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
                 }
                 reply.set("reply", "OK");
                 try {
-                    clientConnection.send(reply);
+                    ((JSONClientConnection)clientConnection).send(reply);
                 } catch (IOException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
