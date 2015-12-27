@@ -350,7 +350,7 @@ public class JSONClientConnection extends ClientConnection {
     }
     
     public boolean setTime(long time, long timeId) {
-        if (emulationTime < time) {
+        if (emulationTime <= time) {
             emulationTime = time;
             return true;
         }

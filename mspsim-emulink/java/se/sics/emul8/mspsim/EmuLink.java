@@ -124,7 +124,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
 
     @Override
     public boolean handleMessage(ClientConnection clientConnection, JsonObject json) {
-        System.out.println("RECV: " + json);
+//        System.out.println("RECV: " + json);
         String cmd = json.getString("command", null);
         String replyStr = json.getString("reply", null);
         JsonObject reply = new JsonObject();
@@ -144,7 +144,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
             if (cmd.equals("time-set")) {
                 JsonObject params = (JsonObject) json.get("params"); 
                 long newTime = params.getLong("time", 0);
-                System.out.println("Accepting time elapsed." + (newTime - myTime));
+//                System.out.println("Accepting time elapsed." + (newTime - myTime));
                 if (newTime > myTime) {
                     node.getCPU().stepMicros(0, newTime);
                     myTime = newTime;

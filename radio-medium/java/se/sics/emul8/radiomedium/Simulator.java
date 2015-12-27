@@ -56,6 +56,7 @@ public class Simulator {
     private RadioListener[] radioListeners = null;
     
     private long time;
+    private long stepTime;
     private Server server;
     private ClientConnection timeController = null;
     private ClientConnection[] emulators;
@@ -94,6 +95,7 @@ public class Simulator {
     }
 
     public void emulatorTimeStepped(ClientConnection client, long id, long timeStepOk) {
+//        log.debug("Got time stepped to " + time + " id:"  + id + " OK:" + timeStepOk + " waitingFor:" + waitingForTimeId + " Emu:" + emulatorsLeft);
         if(id == waitingForTimeId) {
             /* should also check for this specific clients "ack" */
             if (client.setTime(time, id)) {
@@ -103,7 +105,8 @@ public class Simulator {
             }
 
             if (getEmulatorsLeft() == 0) {
-                log.debug("No more emulators executing... - we are all at time: {}", time);
+                time = stepTime;
+//                log.debug("No more emulators executing... - we are all at time: {}", time);
                 /* this should be handled in other thread? */
                 processAllEvents(time);
                 getTimeController().timeStepDone(waitingForTimeId);
@@ -122,6 +125,7 @@ public class Simulator {
             emulatorsLeft = 0;
             return;
         }
+        stepTime = time;
         emulatorsLeft = emulators.length;
 
         /* inform all emulators about the time stepping */

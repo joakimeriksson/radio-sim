@@ -28,12 +28,11 @@ public class CoojaClientConnection extends ClientConnection {
             @Override
             public void run() {
                 while(!stop) {
-                    System.out.println("Time: " + time);
                     sim.stepTime(time, ++myTimeId);
                     synchronized(CoojaClientConnection.this) {
                         try {
                             CoojaClientConnection.this.wait();
-                            time += 1000; /* one millisecond */
+                            time += 1000000; /* one millisecond */
                         } catch (InterruptedException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -67,9 +66,10 @@ public class CoojaClientConnection extends ClientConnection {
         /* This will controll elapse of time - so this will be called when last time-step is done */
         if(timeId == myTimeId) {
             synchronized(this) {
-                System.out.println("*** Notify tick done!");
                 this.notify();
             }
+        } else {
+            System.out.println("*** Notify tick done! - but expected:" + myTimeId + " got " + timeId);            
         }
     }
 

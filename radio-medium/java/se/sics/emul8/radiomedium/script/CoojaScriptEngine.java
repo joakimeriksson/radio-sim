@@ -52,9 +52,7 @@ import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.NullRadioMedium;
 import se.sics.emul8.radiomedium.RadioMedium;
 import se.sics.emul8.radiomedium.Simulator;
-import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.Server;
-import se.sics.emul8.radiomedium.util.PcapListener;
 
 /*
 import org.contikios.cooja.Cooja;
@@ -92,7 +90,7 @@ public class CoojaScriptEngine {
     private Thread scriptThread = null; /* Script thread */
     private CoojaScriptMote scriptMote;
 
-    private boolean stopSimulation = false, quitCooja = false;
+    private boolean stopSimulation = false;
 
     private Simulator simulator;
 
