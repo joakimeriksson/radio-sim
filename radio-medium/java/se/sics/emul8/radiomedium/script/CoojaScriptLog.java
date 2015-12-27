@@ -44,7 +44,7 @@ public class CoojaScriptLog {
     }
     
     public void generateMessage(long delay, String msg) {
-        
+        System.out.println("GenMessage..." + msg);
     }
     
     public void append(String filename, String msg) {

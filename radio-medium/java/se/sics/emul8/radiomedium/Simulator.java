@@ -102,6 +102,7 @@ public class Simulator {
                 emulatorsLeft--;
             } else {
               /* What to do here? */
+                log.debug("ClientConnection did not accept time stepped call");
             }
 
             if (getEmulatorsLeft() == 0) {
@@ -111,6 +112,8 @@ public class Simulator {
                 processAllEvents(time);
                 getTimeController().timeStepDone(waitingForTimeId);
             }
+        } else {
+            log.debug("Wrong ID for emulatorTimeStepped:{} got {}", waitingForTimeId, id);
         }
     }
 
@@ -119,7 +122,7 @@ public class Simulator {
     }
 
     public void stepTime(long time, long id) {
-        waitingForTimeId = simulatorMessageId.incrementAndGet();
+        waitingForTimeId = id; //simulatorMessageId.incrementAndGet();
         lastTimeId = id;
         if (emulators == null) {
             emulatorsLeft = 0;

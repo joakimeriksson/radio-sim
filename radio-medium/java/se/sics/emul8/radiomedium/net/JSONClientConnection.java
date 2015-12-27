@@ -293,7 +293,7 @@ public class JSONClientConnection extends ClientConnection {
                 output.write(data);
                 output.write(NEW_LINE);
             }
-            System.out.println("Data:'" + new String(data) + "'" + " len:" + data.length);
+//            System.out.println("Data:'" + new String(data) + "'" + " len:" + data.length);
             return true;
         }
         return false;

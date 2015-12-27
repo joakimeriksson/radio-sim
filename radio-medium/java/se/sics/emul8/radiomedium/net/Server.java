@@ -140,7 +140,7 @@ public class Server implements ClientHandler {
 
     @Override
     public boolean handleMessage(ClientConnection client, JsonObject json) {
-        log.info("from client {}: {}", client.getName(), json.toString());
+        //log.info("from client {}: {}", client.getName(), json.toString());
         if (simulator == null) {
             log.error("simulation not set...");
             return false;

@@ -9,14 +9,21 @@ import se.sics.emul8.radiomedium.net.ClientHandler;
 import se.sics.emul8.radiomedium.net.JSONClientConnection;
 import se.sics.mspsim.core.USARTListener;
 import se.sics.mspsim.core.USARTSource;
+import se.sics.mspsim.core.Memory.AccessType;
+import se.sics.mspsim.core.MemoryMonitor;
+import se.sics.mspsim.chip.DS2411;
 import se.sics.mspsim.chip.PacketListener;
 import se.sics.mspsim.chip.Radio802154;
 import se.sics.mspsim.core.Chip;
+import se.sics.mspsim.core.Memory;
 import se.sics.mspsim.core.OperatingModeListener;
 import se.sics.mspsim.core.USART;
 import se.sics.mspsim.platform.GenericNode;
+import se.sics.mspsim.platform.sky.CC2420Node;
 import se.sics.mspsim.util.ArgumentManager;
 import se.sics.mspsim.util.ComponentRegistry;
+import se.sics.mspsim.util.MapEntry;
+import se.sics.mspsim.util.MapTable;
 
 import com.eclipsesource.json.JsonObject;
 
@@ -200,6 +207,8 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         ArgumentManager config = new ArgumentManager();
         config.handleArguments(args);
 
+        int nodeId = config.getPropertyAsInt("id", -1);
+
         String nodeType = config.getProperty("nodeType");
         String platform = nodeType;
         GenericNode node;
@@ -230,6 +239,19 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         }
         boolean isTimeController = config.getPropertyAsBoolean("timectrl", false);
         node.setupArgs(config);
+
+        System.out.println("**** ID = " + nodeId);
+        
+        DS2411 ds2411 = node.getCPU().getChip(DS2411.class);
+        if (ds2411 != null) {
+            System.out.println("Setting MAC/NodeID");
+            if(node instanceof CC2420Node) {
+                if (nodeId == -1) {
+                    nodeId = ((int)(Math.random() * 255)) & 0xff;
+                }
+                ((CC2420Node) node).setNodeID(nodeId);
+            }
+        }
         
         EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController, node);
 
@@ -252,6 +274,48 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
 //                    System.out.println("Radio mode changed:" + arg1);
                 }
             });
+        }
+        
+        MapTable map = r.getComponent(MapTable.class);
+        System.out.println("*** MAP:" + map);
+        if (map != null) {
+            /* Try to find Node ID for Contiki */
+            MapEntry[] entries = map.getEntries("node_id");
+            if (entries != null) {
+                System.out.printf("Entry: %04x\n",entries[0].getAddress());
+                final Memory mem = node.getCPU().getMemory();
+                final int node_id = entries[0].getAddress();
+                int id = mem.read(entries[0].getAddress(),Memory.AccessMode.WORD, Memory.AccessType.READ);
+                System.out.printf("Value: %02x\n",id);
+                node.getCPU().addWatchPoint(entries[0].getAddress(), new MemoryMonitor() {
+                    @Override
+                    public void notifyReadAfter(int arg0,
+                            se.sics.mspsim.core.Memory.AccessMode arg1,
+                            AccessType arg2) {
+                    }
+
+                    @Override
+                    public void notifyReadBefore(int arg0,
+                            se.sics.mspsim.core.Memory.AccessMode arg1,
+                            AccessType arg2) {
+                        System.out.println("Read from *** NODE_ID ***");
+                        mem.set(node_id, 4711, Memory.AccessMode.WORD);
+                    }
+
+                    @Override
+                    public void notifyWriteAfter(int arg0, int arg1,
+                            se.sics.mspsim.core.Memory.AccessMode arg2) {
+                        System.out.println("Write to *** NODE_ID ***");
+                        mem.set(node_id, 4711, Memory.AccessMode.WORD);
+                    }
+
+                    @Override
+                    public void notifyWriteBefore(int arg0, int arg1,
+                            se.sics.mspsim.core.Memory.AccessMode arg2) {
+                    }
+                    
+                });
+            }
         }
         
         c.serveForever();

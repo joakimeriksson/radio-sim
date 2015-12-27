@@ -31,13 +31,10 @@
 package se.sics.emul8.radiomedium.script;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.UndeclaredThrowableException;
 import java.util.Hashtable;
-import java.util.Observer;
 import java.util.concurrent.Semaphore;
 
 import javax.script.Invocable;
@@ -99,7 +96,8 @@ public class CoojaScriptEngine {
     public CoojaScriptEngine(Simulator simulator) {
         this.simulator = simulator;
         logOutputListener = new CoojaClientConnection(this, simulator);
-        simulator.setTimeController(logOutputListener);
+        this.simulator.setTimeController(logOutputListener);
+        this.simulator.addEventListener(logOutputListener);
     }
     
     /* Only called from the simulation loop */
@@ -108,6 +106,7 @@ public class CoojaScriptEngine {
         Semaphore semScript = semaphoreScript;
         Semaphore semSim = semaphoreSim;
         if (semScript == null || semSim == null) {
+            logger.debug("No semScript or semSim");
             return;
         }
         semScript.release();
@@ -124,7 +123,7 @@ public class CoojaScriptEngine {
 
         /* Check if test script requested us to stop */
         if (stopSimulation) {
-            System.out.println("Simulation should now stop...");
+            logger.debug("Simulation should now stop...");
         }
     }
 
@@ -133,6 +132,7 @@ public class CoojaScriptEngine {
         try {
             if (scriptThread == null ||
                     !scriptThread.isAlive()) {
+                System.out.println("SCRIPT THREAD IS DEAD!!!");
                 return;
             }
 
@@ -185,7 +185,6 @@ public class CoojaScriptEngine {
     }
 
     public void startSimulation(String scriptCode) throws ScriptException {
-        logOutputListener.startTick();
         if (semaphoreScript != null) {
             logger.warn("Semaphores were not reset correctly");
             semaphoreScript.release(100);
@@ -210,6 +209,7 @@ public class CoojaScriptEngine {
             logger.info("Script timeout in " + (timeout/1000) + " ms");
         }
 
+        System.out.println("CODE ******* \n" + jsCode);
         engine.eval(jsCode);
 
         /* Setup script control */
@@ -220,11 +220,16 @@ public class CoojaScriptEngine {
         engine.put("SEMAPHORE_SCRIPT", semaphoreScript);
         engine.put("SEMAPHORE_SIM", semaphoreSim);
 
+        logger.debug("Aquire Sem...");
+
         try {
             semaphoreScript.acquire();
         } catch (InterruptedException e) {
             logger.error("Error when creating engine: " + e.getMessage(), e);
         }
+
+        logger.debug("Aquired Sem...");
+
         ThreadGroup group = new ThreadGroup("script") {
             public void uncaughtException(Thread t, Throwable e) {
                 while (e.getCause() != null) {
@@ -240,7 +245,7 @@ public class CoojaScriptEngine {
         };
         scriptThread = new Thread(group, new Runnable() {
             public void run() {
-                /*logger.info("test script thread starts");*/
+                logger.info("test script thread starts");
                 try {
                     ((Invocable)engine).getInterface(Runnable.class).run();
                 } catch (RuntimeException e) {
@@ -257,13 +262,9 @@ public class CoojaScriptEngine {
                         stopSimulation();
                     }
                 }
-                /*logger.info("test script thread exits");*/
+                logger.info("test script thread exits");
             }
         });
-        scriptThread.start(); /* Starts by acquiring semaphore (blocks) */
-        while (!semaphoreScript.hasQueuedThreads()) {
-            Thread.yield();
-        }
 
         /* Create script output logger */
         engine.put("log", new CoojaScriptLog());
@@ -275,6 +276,14 @@ public class CoojaScriptEngine {
 
         scriptMote = new CoojaScriptMote();
         engine.put("node", scriptMote);
+
+        /* Start all after putting things in */
+        scriptThread.start(); /* Starts by acquiring semaphore (blocks) */
+        while (!semaphoreScript.hasQueuedThreads()) {
+            Thread.yield();
+        }
+        logger.debug("Exit - startSimulation(code)");
+        logOutputListener.startTick();
     }
     
     
@@ -307,6 +316,8 @@ public class CoojaScriptEngine {
         System.out.println("CODE:" + code.toString());
         
         engine.startSimulation(code.toString());
+        
+        engine.handleNewMoteOutput(null, "42", 100, "test message");
         
     }
 }

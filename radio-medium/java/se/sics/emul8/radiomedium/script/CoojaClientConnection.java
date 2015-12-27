@@ -1,4 +1,6 @@
 package se.sics.emul8.radiomedium.script;
+import java.util.ArrayList;
+
 import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.RadioPacket;
 import se.sics.emul8.radiomedium.SimulationEvent;
@@ -15,9 +17,27 @@ public class CoojaClientConnection extends ClientConnection {
     private boolean stop = false;
     private Thread tickThread;
     
+    private ArrayList<SimulationEvent> events = new ArrayList<SimulationEvent>();
+    
     public CoojaClientConnection(CoojaScriptEngine engine, Simulator sim) {
         coojaScriptEngine = engine;
         this.sim = sim;
+    }
+    
+    private void handleAllEvents() {
+        if(events.size() == 0) {
+            return;
+        }
+        for (SimulationEvent event : events) {
+            Node mote = event.getSource();
+            System.out.println("Log MSG: " + event.getData("logMessage").toString().trim() + " " + Thread.currentThread().getName());
+            coojaScriptEngine.handleNewMoteOutput(
+                    mote,
+                    mote.getId(),
+                    event.getTime(),
+                    (String) event.getData("logMessage"));
+        }
+        events.clear();
     }
     
     public void startTick() {
@@ -31,8 +51,11 @@ public class CoojaClientConnection extends ClientConnection {
                     sim.stepTime(time, ++myTimeId);
                     synchronized(CoojaClientConnection.this) {
                         try {
+                            System.out.print("[+]");
                             CoojaClientConnection.this.wait();
+                            handleAllEvents();
                             time += 1000000; /* one millisecond */
+                            Thread.sleep(100);
                         } catch (InterruptedException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -42,6 +65,7 @@ public class CoojaClientConnection extends ClientConnection {
                 }
             }
         });
+        tickThread.setName("CoojaTestTickThread");
         System.out.println("Starting Tick thread.");
         tickThread.start();
     }
@@ -66,6 +90,7 @@ public class CoojaClientConnection extends ClientConnection {
         /* This will controll elapse of time - so this will be called when last time-step is done */
         if(timeId == myTimeId) {
             synchronized(this) {
+                System.out.print("[-]");
                 this.notify();
             }
         } else {
@@ -81,14 +106,8 @@ public class CoojaClientConnection extends ClientConnection {
 
     @Override
     public void sendEvent(SimulationEvent event) {
-        if(event.getType() == SimulationEvent.EventType.LOG_MESSAGE) {
-            Node mote = event.getSource();
-            coojaScriptEngine.handleNewMoteOutput(
-                    mote,
-                    mote.getId(),
-                    event.getTime(),
-                    (String) event.getData("logMessage")
-                    );
+        if (event.getType() == SimulationEvent.EventType.LOG_MESSAGE) {
+            events.add(event);
         }
     }
 

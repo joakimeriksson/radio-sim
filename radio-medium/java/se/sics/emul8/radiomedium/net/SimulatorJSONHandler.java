@@ -25,6 +25,7 @@ public class SimulatorJSONHandler {
     }
 
     public boolean handleMessage(ClientConnection client, JsonObject json) {
+ //       log.debug("Got: " + json);
         JsonObject reply = new JsonObject();
         long id = -1;
         long time = simulator.getTime();
@@ -34,6 +35,7 @@ public class SimulatorJSONHandler {
         }
         String command = json.getString("command", null);
         String replyStr = json.getString("reply", null);
+        /* Assumed to be a time-set reply ???*/
         if (replyStr != null && replyStr.equals("OK")) {
             simulator.emulatorTimeStepped(client, id, Simulator.TIME_STEP_OK);
             reply = null; /* no reply */

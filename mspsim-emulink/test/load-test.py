@@ -73,7 +73,12 @@ time.sleep(5)
 
 fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
 print "Loading:",fw
-n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
+n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
+
+n = allNodes['1']
+fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
+print "Loading:",fw
+n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
 
 # not needed - above test program steps automatically...
 #print "******* starting test client that steps the simulation *******"
