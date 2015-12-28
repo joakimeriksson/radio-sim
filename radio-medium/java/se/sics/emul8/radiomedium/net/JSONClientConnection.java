@@ -292,6 +292,7 @@ public class JSONClientConnection extends ClientConnection {
             } else {
                 output.write(data);
                 output.write(NEW_LINE);
+                output.flush();
             }
 //            System.out.println("Data:'" + new String(data) + "'" + " len:" + data.length);
             return true;
@@ -342,7 +343,9 @@ public class JSONClientConnection extends ClientConnection {
         json.add("params", new JsonObject().add("time", time));
         
         try {
-            send(json);
+            if(!send(json)) {
+                log.debug("Could not send step-time...");
+            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

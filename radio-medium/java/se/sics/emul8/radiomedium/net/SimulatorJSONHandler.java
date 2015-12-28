@@ -25,7 +25,7 @@ public class SimulatorJSONHandler {
     }
 
     public boolean handleMessage(ClientConnection client, JsonObject json) {
- //       log.debug("Got: " + json);
+        log.debug("Got: " + json);
         JsonObject reply = new JsonObject();
         long id = -1;
         long time = simulator.getTime();

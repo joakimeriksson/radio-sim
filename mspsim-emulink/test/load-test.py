@@ -70,15 +70,11 @@ print " =============="
 main = subprocess.Popen(['java', '-cp', 'emul8-radio-medium.jar', 'se.sics.emul8.radiomedium.script.CoojaScriptEngine'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd="../../radio-medium")
 # send in the data to the input of the sub-process...
 time.sleep(5)
-
-fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
-print "Loading:",fw
-n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
-
-n = allNodes['1']
-fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
-print "Loading:",fw
-n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
+for key in allNodes:
+    n = allNodes[key]
+    fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
+    print "Loading for ",n.id, " fw: ", fw
+    n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
 
 # not needed - above test program steps automatically...
 #print "******* starting test client that steps the simulation *******"

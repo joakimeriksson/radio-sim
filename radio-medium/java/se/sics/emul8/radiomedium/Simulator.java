@@ -100,6 +100,7 @@ public class Simulator {
             /* should also check for this specific clients "ack" */
             if (client.setTime(time, id)) {
                 emulatorsLeft--;
+                System.out.print("" + emulatorsLeft);
             } else {
               /* What to do here? */
                 log.debug("ClientConnection did not accept time stepped call");

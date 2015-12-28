@@ -45,11 +45,11 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
     private long controllerTime;
     private RadioWrapper wradio;
     
-    public EmuLink(String host, int port, boolean isTimeController, GenericNode node) throws IOException {
+    public EmuLink(String host, int port, boolean isTimeController, GenericNode node, int nodeId) throws IOException {
         this.clientConnection = new JSONClientConnection(this, host, port);
         this.node = node;
         this.isTimeController = isTimeController;
-        this.nodeId = (int) (Math.random() * 10);
+        this.nodeId = nodeId;
         this.clientConnection.start();
     }
 
@@ -131,7 +131,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
 
     @Override
     public boolean handleMessage(ClientConnection clientConnection, JsonObject json) {
-//        System.out.println("RECV: " + json);
+        System.out.println("RECV: " + json);
         String cmd = json.getString("command", null);
         String replyStr = json.getString("reply", null);
         JsonObject reply = new JsonObject();
@@ -253,7 +253,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
             }
         }
         
-        EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController, node);
+        EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController, node, nodeId);
 
         ComponentRegistry r = node.getRegistry();
         USART uart = r.getComponent(USART.class);
