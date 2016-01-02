@@ -1,18 +1,24 @@
 package se.sics.emul8.mspsim;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.Yaml;
+
+import se.sics.emul8.radiomedium.Position;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.net.ClientHandler;
 import se.sics.emul8.radiomedium.net.JSONClientConnection;
-import se.sics.mspsim.core.USARTListener;
-import se.sics.mspsim.core.USARTSource;
+import se.sics.emul8.radiomedium.util.ArrayUtils;
 import se.sics.mspsim.core.Memory.AccessType;
 import se.sics.mspsim.core.MemoryMonitor;
 import se.sics.mspsim.chip.DS2411;
-import se.sics.mspsim.chip.PacketListener;
 import se.sics.mspsim.chip.Radio802154;
 import se.sics.mspsim.core.Chip;
 import se.sics.mspsim.core.Memory;
@@ -25,9 +31,29 @@ import se.sics.mspsim.util.ComponentRegistry;
 import se.sics.mspsim.util.MapEntry;
 import se.sics.mspsim.util.MapTable;
 
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+/*
+ * Emulation tool for MSPSim based emulations that connect to radio-sim's radio medium.
+ * 
+ * java -jar ... -yaml => reads a yaml from standard in
+ * 
+ * YAML format:
+ * A map of key-value's where
+ * nodes: is a list of nodes that define the nodes ID and position in the simulation.
+ * 
+ * Example:
+ * nodes:
+ * - {id: 1, pos: [1,2]}
+ * - {id: 2, pos: [12,4]}
+ * - ...
+ * other config....
+ * 
+ * The format for position is [x,y]
+ * 
+ */
 
-public class EmuLink implements ClientHandler, USARTListener, PacketListener {
+public class EmuLink implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(EmuLink.class);
 
@@ -35,44 +61,63 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
     private static final long DURATION = 1000;
 
     private final JSONClientConnection clientConnection;
-    private final GenericNode node;
+    private NodeHandler[] nodes;
+    private HashMap<String,NodeHandler> nodeMap = new HashMap<String, NodeHandler>();
+    
     private final boolean isTimeController;
-    private int nodeId;
     private long myTime;
     private AtomicLong messageId = new AtomicLong();
     private long timeId;
     private volatile boolean isWaitingForTimeReply;
     private long controllerTime;
-    private RadioWrapper wradio;
     
-    public EmuLink(String host, int port, boolean isTimeController, GenericNode node, int nodeId) throws IOException {
+    public EmuLink(String host, int port, boolean isTimeController) throws IOException {
         this.clientConnection = new JSONClientConnection(this, host, port);
-        this.node = node;
         this.isTimeController = isTimeController;
-        this.nodeId = nodeId;
-        this.clientConnection.start();
     }
 
+    private void addNode(NodeHandler node, int nodeId) {
+        // TODO Auto-generated method stub
+        nodes = ArrayUtils.add(NodeHandler.class, nodes, node);
+        nodeMap.put("" + nodeId, node);
+    }
+    
     public ClientConnection getConnection() {
         return this.clientConnection;
     }
 
+    public void connect() {
+        this.clientConnection.start();
+    }
+    
     private JsonObject createCommand(String cmd, JsonObject params) {
         JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("params", params);
         return jsonCmd;
     }
 
-    private void sendInit() throws IOException {
-        JsonObject reqNode = createCommand("node-config-set", new JsonObject().add("node-id", nodeId));
+    private void sendInit(String nodeIdStr) throws IOException {
+        log.debug("Registering node with ID: " + nodeIdStr);
+        JsonObject config = new JsonObject();
+        int nodeid = Integer.parseInt(nodeIdStr);
+        NodeHandler node = nodeMap.get(nodeIdStr);
+        config.add("node-id", nodeid);
+        Position pos = node.getPosition();
+        if (pos != null) {
+            JsonArray jpos = new JsonArray();
+            jpos.add(pos.x).add(pos.y).add(pos.z);
+            config.add("position", jpos);
+        }
+        JsonObject reqNode = createCommand("node-config-set", config);
         clientConnection.send(reqNode);
     }
 
-    private void sendLog(String log) throws IOException {
+    void sendLog(int nodeId, String log) throws IOException {
         JsonObject reqNode = createCommand("log", new JsonObject().add("node-id", nodeId).add("message", log));
         clientConnection.send(reqNode);
     }
 
     char hex[] = "0123456789ABCDEF".toCharArray();
+
     private String hex(int i) {
         String s;
         i = i & 0xff;
@@ -80,7 +125,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         return s;
     }
     
-    void sendPacket(byte[] packet) throws IOException {
+    void sendPacket(int nodeId, byte[] packet) throws IOException {
         StringBuffer sb = new StringBuffer();
         JsonObject transmit = new JsonObject();
         transmit.add("command", "transmit");
@@ -98,8 +143,12 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         JsonObject params = new JsonObject();
         timeMessage.add("command", "time-set");
         timeMessage.add("params", params);
+        connect();
+        /* register all the nodes */
         try {
-            sendInit();
+            for (String node : nodeMap.keySet()) {
+                sendInit(node);
+            }
         } catch (IOException e1) {
             // TODO Auto-generated catch block
             e1.printStackTrace();
@@ -153,7 +202,10 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
                 long newTime = params.getLong("time", 0);
 //                System.out.println("Accepting time elapsed." + (newTime - myTime));
                 if (newTime > myTime) {
-                    node.getCPU().stepMicros(0, newTime);
+                    for (int i = 0; i < nodes.length; i++) {
+                        GenericNode node = nodes[i].getNode();
+                        node.getCPU().stepMicros(0, newTime);
+                    }
                     myTime = newTime;
                 }
                 reply.set("reply", "OK");
@@ -168,7 +220,12 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
                 /* all packets should go into the radio? */
                 String data = json.getString("packet-data", null);
                 System.out.println("Transmission for node: " + destId + " " + data);
-                wradio.packetReceived(data);
+                NodeHandler node = nodeMap.get(destId);
+                if (node != null) {
+                    node.packetReceived(data);
+                } else {
+                    log.debug("No Radio for this id!");
+                }
             }
         }
         return true;
@@ -180,25 +237,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         System.exit(0);
     }
 
-
-    /* UART Handling */
-    static StringBuffer sbuf = new StringBuffer();
-    @Override
-    public void dataReceived(USARTSource source, int data) {
-        // Receive and printout UART data. 
-        sbuf.append((char) data);
-        if(data == '\n') {
-            System.out.println("UART Data:" + sbuf.toString());
-            try {
-                sendLog(sbuf.toString());
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-            sbuf.setLength(0);
-        }
-    }    
-    
+     
     public static void main(String[] args) throws IOException {
         if (System.getProperty("logback.configurationFile") == null) {
             System.setProperty("logback.configurationFile", "logback.xml");
@@ -208,14 +247,83 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
         config.handleArguments(args);
 
         int nodeId = config.getPropertyAsInt("id", -1);
+        boolean isTimeController = config.getPropertyAsBoolean("timectrl", false);
+        EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController);
+        boolean nodesCreated = false;
+        
+        /* If the yaml argument is given as a boolean we will just read std. input until a empty line */
+        if(config.getPropertyAsBoolean("yaml", false)) {
+            Yaml yaml = new Yaml();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+            StringBuffer buf = new StringBuffer();
+            String line = "";
+            /* this will only allow non-empty lines... */
+            while(line != null) {
+                line = reader.readLine();
+                if(line.equals("")) {
+                    line = null;
+                } else {
+                    buf.append(line + "\n");
+                }
+            }
+            reader.close();
+            System.out.println("CNF:" + buf.toString());
+            Object conf = yaml.load(buf.toString());
+            System.out.println("CONFIG:" +  conf);
+            
+            if (conf instanceof Map) {
+                @SuppressWarnings("rawtypes")
+                Map map = (Map) conf;
+                Object val = map.get("nodes");
+                /* found the node-list */
+                if (val instanceof List) {
+                    for (Map<String,Object> nodeMap : (List<Map>) val) {
+                        System.out.println("Found node:" + nodeMap.get("id") + " pos:" + nodeMap.get("position"));
+                        int id = getInt(nodeMap.get("id"));
+                        NodeHandler node = setupNode(id, config.getProperty("nodeType"), config.getProperty("platform"), config, c);
+                        @SuppressWarnings("rawtypes")
+                        List pos = (List) nodeMap.get("position");
+                        if (pos != null) {
+                            double x = 0, y = 0, z = 0;
+                            x = getDouble(pos.get(0));
+                            y = getDouble(pos.get(1));
+                            if (pos.size() > 2) {
+                                z = getDouble(pos.get(2));
+                            }
+                            node.getPosition().set(x, y, z);
+                        }
+                        c.addNode(node, id);
+                        nodesCreated = true;
+                    }
+                }
+            }
+        }
 
-        String nodeType = config.getProperty("nodeType");
-        String platform = nodeType;
+        /* if no nodes are created with other config - create one here */
+        if (!nodesCreated) {
+            NodeHandler node = setupNode(nodeId, config.getProperty("nodeType"), config.getProperty("platform"), config, c);
+            c.addNode(node, nodeId);
+        }
+        c.serveForever();
+    }
+
+    private static double getDouble(Object object) {
+        if(object instanceof Number) {
+            return ((Number) object).doubleValue();
+        }
+        return Double.parseDouble("" + object);
+    }
+
+    private static int getInt(Object object) {
+        if(object instanceof Number) return ((Number)object).intValue();
+        return Integer.parseInt("" + object);
+    }
+
+    public static NodeHandler setupNode(int nodeId, String nodeType, String platform, ArgumentManager config, EmuLink c) throws IOException {
         GenericNode node;
         if (nodeType != null) {
             node = se.sics.mspsim.Main.createNode(nodeType);
         } else {
-            platform = config.getProperty("platform");
             if (platform == null) {
                 // Default platform
                 platform = "sky";
@@ -237,7 +345,6 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
             System.err.println("MSPSim does not currently support the platform '" + platform + "'.");
             System.exit(1);
         }
-        boolean isTimeController = config.getPropertyAsBoolean("timectrl", false);
         node.setupArgs(config);
 
         System.out.println("**** ID = " + nodeId);
@@ -253,29 +360,35 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
             }
         }
         
-        EmuLink c = new EmuLink("127.0.0.1", DEFAULT_PORT, isTimeController, node, nodeId);
 
         ComponentRegistry r = node.getRegistry();
-        USART uart = r.getComponent(USART.class);
-        if (uart != null) {
-            uart.addUSARTListener(c);
-        }
 
         /* Only works with 802154 radio for now */
-        Radio802154 radio = (Radio802154) node.getCPU().getChip(Radio802154.class);
+        Radio802154 radio = node.getCPU().getChip(Radio802154.class);
         System.out.println("Radio:" + radio);
         radio.setRSSI(-100); /* needed to set the CCA to 1 */
+        RadioWrapper wradio = null;
         if(radio != null) {
             System.out.println("*** Installing radio listener...");
-            c.wradio = new RadioWrapper(radio);
-            c.wradio.addPacketListener(c);
+            wradio = new RadioWrapper(radio);
             radio.addOperatingModeListener(new OperatingModeListener() {
                 public void modeChanged(Chip arg0, int arg1) {
 //                    System.out.println("Radio mode changed:" + arg1);
                 }
             });
         }
+
+        NodeHandler nodeHandler = new NodeHandler(nodeId, c, node, wradio);
+        if(wradio != null) {
+            wradio.addPacketListener(nodeHandler);
+        }
+
+        USART uart = r.getComponent(USART.class);
+        if (uart != null) {
+            uart.addUSARTListener(nodeHandler);
+        }
         
+        /* Configure node-id for one node */
         MapTable map = r.getComponent(MapTable.class);
         System.out.println("*** MAP:" + map);
         if (map != null) {
@@ -317,23 +430,7 @@ public class EmuLink implements ClientHandler, USARTListener, PacketListener {
                 });
             }
         }
-        
-        c.serveForever();
+        return nodeHandler;
     }
-
-    @Override
-    public void transmissionEnded(byte[] data) {
-        System.out.println("*** Packet to send: " + data.length + " bytes");
-        try {
-            sendPacket(data);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
-    }
-
-    @Override
-    public void transmissionStarted() {
-        System.out.println("*** Transmission started...");
-    }
+    
 }

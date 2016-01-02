@@ -8,6 +8,7 @@ class Type(object):
         self.id = mtype.find('identifier').text
         self.command = mtype.find('commands').text
         self.firmware = mtype.find('firmware').text
+        self.nodes = []
     def out(self):
         print "Type    :", self.desc," ID:",self.id
         print "Command :", self.command
@@ -24,10 +25,13 @@ class Node(object):
         self.id = mote.find('interface_config/id').text
         self.x = mote.find('interface_config/x').text
         self.y = mote.find('interface_config/y').text
+        self.z = 0.0
         self.type = mote.find('motetype_identifier').text
 
-    def out(self):
-        print "Node:",self.id,"of", self.type, "pos:", self.x,",",self.y
+    def yaml(self):
+        return "{id: %s, position: [%s,%s,%s]}" % (self.id, self.x, self.y, self.z)
+    def __repr__(self):
+        return "Node: " + self.id + " of " + self.type + " pos: " + self.x + "," + self.y
 
 loadedTypes = {}
 allNodes = {}
@@ -55,9 +59,9 @@ root = tree.getroot()
 motes = root.iter('mote')
 for mote in motes:
     n = Node(mote)
-    n.out()
-    print "Should load:",loadedTypes[n.type].firmware
+    print n
     allNodes[n.id] = n
+    loadedTypes[n.type].nodes.append(n)
 
 root = tree.getroot()
 script = root.find('plugin/plugin_config/script').text
@@ -70,11 +74,27 @@ print " =============="
 main = subprocess.Popen(['java', '-cp', 'emul8-radio-medium.jar', 'se.sics.emul8.radiomedium.script.CoojaScriptEngine'], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd="../../radio-medium")
 # send in the data to the input of the sub-process...
 time.sleep(5)
-for key in allNodes:
-    n = allNodes[key]
-    fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
+
+#for key in allNodes:
+#    n = allNodes[key]
+#    fw = loadedTypes[n.type].firmware.replace("[CONTIKI_DIR]",contiki)
+#    print "Loading for ",n.id, " fw: ", fw
+#    n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
+
+# create a load-all nodes of the same type into the same MSPSim runner
+
+for key in loadedTypes:
+    fw = loadedTypes[key].firmware.replace("[CONTIKI_DIR]",contiki)
     print "Loading for ",n.id, " fw: ", fw
-    n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-id=" + n.id], stderr=subprocess.STDOUT, cwd="../../mspsim-emulink")
+    n1 = subprocess.Popen(['java', '-jar', 'mspsim-emulink.jar',fw,"-yaml"], stderr=subprocess.STDOUT, stdin=subprocess.PIPE, cwd="../../mspsim-emulink")
+    yamlconf = "nodes:\n"
+    for node in loadedTypes[key].nodes:
+        print "Generating start info for node:", node
+        yamlconf += "- %s\n" % (node.yaml())
+    yamlconf += "\n"
+    print yamlconf
+    n1.stdin.write(yamlconf)
+    print "conf - done **** !"
 
 # not needed - above test program steps automatically...
 #print "******* starting test client that steps the simulation *******"

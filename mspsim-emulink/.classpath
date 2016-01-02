@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="lib/mspsim.jar" sourcepath="/mspsim"/>
 	<classpathentry kind="lib" path="mspsim-emulink.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/snakeyaml-1.16.jar"/>
 	<classpathentry kind="output" path="out"/>
 </classpath>
