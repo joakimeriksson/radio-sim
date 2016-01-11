@@ -18,10 +18,15 @@ public class CoojaClientConnection extends ClientConnection {
     private Thread tickThread;
     
     private ArrayList<SimulationEvent> events = new ArrayList<SimulationEvent>();
+    private long timeout = 60 * 60 * 1000 * 1000; /* 1 hours default timeout */
     
     public CoojaClientConnection(CoojaScriptEngine engine, Simulator sim) {
         coojaScriptEngine = engine;
         this.sim = sim;
+    }
+    
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
     
     private void handleAllEvents() {
@@ -62,6 +67,12 @@ public class CoojaClientConnection extends ClientConnection {
                             stop = true;
                         }
                     }
+                    if(time > timeout) {
+                        /* stop simulation */
+                        stop = true;
+                        coojaScriptEngine.timeoutScript();
+                        System.out.println("Tick Thread Stopped.");
+                    }
                 }
             }
         });
@@ -73,6 +84,10 @@ public class CoojaClientConnection extends ClientConnection {
     public void stopTick() {
         stop = true;
         tickThread = null;
+    }
+    
+    public boolean isTicking() {
+        return stop == false;
     }
     
     @Override
@@ -87,7 +102,7 @@ public class CoojaClientConnection extends ClientConnection {
 
     @Override
     public void timeStepDone(long timeId) {
-        /* This will controll elapse of time - so this will be called when last time-step is done */
+        /* This will control elapse of time - so this will be called when last time-step is done */
         if(timeId == myTimeId) {
             synchronized(this) {
                 System.out.print("]");

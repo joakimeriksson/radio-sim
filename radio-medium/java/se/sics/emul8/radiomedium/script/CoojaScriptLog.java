@@ -43,6 +43,7 @@ public class CoojaScriptLog {
         System.out.println("Test Failed");        
     }
     
+    /* TODO: add an event-queue in the Simulator that can be used for "triggering" things at specific times */
     public void generateMessage(long delay, String msg) {
         System.out.println("GenMessage..." + msg);
     }

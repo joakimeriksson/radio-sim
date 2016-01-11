@@ -208,8 +208,8 @@ public class CoojaScriptEngine {
         } else {
             logger.info("Script timeout in " + (timeout/1000) + " ms");
         }
-
-        System.out.println("CODE ******* \n" + jsCode);
+        logOutputListener.setTimeout(timeout);        
+        
         engine.eval(jsCode);
 
         /* Setup script control */
@@ -219,8 +219,6 @@ public class CoojaScriptEngine {
         engine.put("SHUTDOWN", false);
         engine.put("SEMAPHORE_SCRIPT", semaphoreScript);
         engine.put("SEMAPHORE_SIM", semaphoreSim);
-
-        logger.debug("Aquire Sem...");
 
         try {
             semaphoreScript.acquire();
@@ -286,6 +284,11 @@ public class CoojaScriptEngine {
         logOutputListener.startTick();
     }
     
+    public void timeoutScript() {
+        engine.put("TIMEOUT", true);
+        stepScript();
+    }
+    
     
     public static void main(String[] args) throws IOException, ScriptException {
         Simulator simulator = new Simulator();
@@ -316,8 +319,6 @@ public class CoojaScriptEngine {
         System.out.println("CODE:" + code.toString());
         
         engine.startSimulation(code.toString());
-        
-        engine.handleNewMoteOutput(null, "42", 100, "test message");
-        
+                
     }
 }
