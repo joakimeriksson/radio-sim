@@ -86,9 +86,9 @@ public class RadioPacket {
     public JsonObject toJsonDestination(Node destination, double rssi) {
         JsonObject json = new JsonObject();
         json.add("command", "receive");
-        json.add("destination-node-id", destination.getId());
+        json.add("node-id", destination.getId());
         json.add("time", this.time);
-        json.add("receive-strength", rssi);
+        json.add("rf-power", rssi);
         json.add("wireless-channel", this.channel);
         json.add("packet-data", this.packetData);
         return json;

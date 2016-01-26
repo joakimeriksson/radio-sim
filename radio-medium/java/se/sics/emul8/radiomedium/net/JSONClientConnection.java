@@ -39,7 +39,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
-import java.util.Hashtable;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +56,7 @@ public class JSONClientConnection extends ClientConnection {
 
     private static final int TIMEOUT = 10000;
     
-    private boolean useLength = true; /* Set to false if no line with len and attributes is to be sent */
+    private boolean useLength = false; /* Set to false if no line with len and attributes is to be sent */
 
     private final ClientHandler clientHandler;
     private Socket socket;
@@ -67,7 +66,6 @@ public class JSONClientConnection extends ClientConnection {
     private boolean isConnected;
     private boolean isWaitingForProtocolHeader;
     private boolean hasStarted;
-    private Hashtable<String, Object> clientProperties = new Hashtable<String, Object>();
     private long emulationTime; /* if this is an emulator this will be updated to reflect how far this emulator reached */
 
     public JSONClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {
@@ -103,14 +101,6 @@ public class JSONClientConnection extends ClientConnection {
         log.debug("{} client connected", this.name);
     }
 
-    public void setProperty(String name, Object value) {
-        clientProperties.put(name, value);
-    }
-    
-    public Object getProperty(String name) {
-        return clientProperties.get(name);
-    }
-    
     public String getName() {
         return name;
     }
@@ -196,7 +186,7 @@ public class JSONClientConnection extends ClientConnection {
                         JsonObject json = JsonObject.readFrom(sb.toString());
                         sb.setLength(0);
                         isParsingJSON = false;
-                        log.debug("JSON without len recived.");
+                        log.debug("JSON without len received.");
                         if (!clientHandler.handleMessage(this, json)) {
                             // This connection should no longer be kept alive
                             break;
@@ -215,13 +205,14 @@ public class JSONClientConnection extends ClientConnection {
                 }
 
                 if (isWaitingForProtocolHeader) {
-                    // TODO Verify protocol header.
-                    log.debug("server protocol version: " + parameters);
-                    if (!parameters.startsWith("RSIM ")) {
-                        throw new IOException("unsupported protocol: " + parameters);
-                    }
                     isWaitingForProtocolHeader = false;
-                    continue;
+                    // TODO Verify protocol header.
+                    if (parameters.startsWith("RSIM ")) {
+                        log.debug("server protocol version: {}", parameters);
+                        continue;
+                    } else {
+//                        throw new IOException("unsupported protocol: " + parameters);
+                    }
                 }
 
                 String[] attrs = parameters.split(";");
@@ -340,7 +331,7 @@ public class JSONClientConnection extends ClientConnection {
         JsonObject json = new JsonObject();
         json.add("command", "time-set");
         json.add("id", timeId);
-        json.add("params", new JsonObject().add("time", time));
+        json.add("parameters", new JsonObject().add("time", time));
         
         try {
             if(!send(json)) {
@@ -363,7 +354,7 @@ public class JSONClientConnection extends ClientConnection {
     /* called when the time in the simulator has stepped to the desired time */
     public void timeStepDone(long timeId) {
         try {
-            send(new JsonObject().add("reply", "OK").add("id", timeId));
+            send(new JsonObject().add("reply", "OK").add("id", timeId).add("reply-object", new JsonObject()));
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -383,8 +374,8 @@ public class JSONClientConnection extends ClientConnection {
     public boolean sendLogMsg(int nodeId, String string) {
         JsonObject json = new JsonObject();
         json.add("command", "log");
-        json.add("params", new JsonObject().add("node-id", nodeId).add("message", string));
-        log.debug("Sending log msg:" + string);
+        json.add("parameters", new JsonObject().add("node-id", nodeId).add("message", string));
+        log.debug("Sending log msg: {}", string);
         try {
             send(json);
             return true; /* success */

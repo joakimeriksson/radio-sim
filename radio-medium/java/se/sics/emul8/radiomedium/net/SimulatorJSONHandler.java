@@ -25,14 +25,11 @@ public class SimulatorJSONHandler {
     }
 
     public boolean handleMessage(ClientConnection client, JsonObject json) {
-        log.debug("Got: " + json);
-        JsonObject reply = new JsonObject();
-        long id = -1;
         long time = simulator.getTime();
         ClientConnection[] emulators = simulator.getEmulators();
-        if ((id = json.getLong("id", -1)) != -1) {
-            reply.set("id", id);
-        }
+        log.debug("Got: {}", json);
+        long id = json.getLong("id", -1);
+        JsonObject reply = createReplyObject(id);
         String command = json.getString("command", null);
         String replyStr = json.getString("reply", null);
         /* Assumed to be a time-set reply ???*/
@@ -43,7 +40,7 @@ public class SimulatorJSONHandler {
         if (command == null) {
 
         } else if (command.equals("time-get")) {
-            reply.add("reply",new JsonObject().add("time", time));
+            reply.add("reply-object",new JsonObject().add("time", time));
         } else if (command.equals("time-set")) {
             if (simulator.getTimeController() == null) {
                 simulator.setTimeController(client);
@@ -51,16 +48,14 @@ public class SimulatorJSONHandler {
             if (simulator.getTimeController() == client){
                 /* risky stuff ... */
                 try {
-                    time = json.get("params").asObject().get("time").asLong();
-                    if (emulators == null) {
-                        reply.add("reply","OK");
-                    } else {
+                    time = json.get("parameters").asObject().get("time").asLong();
+                    if (emulators != null) {
                         // Allocate new sequence number for the command
                         simulator.stepTime(time, id);
 //                        json = new JsonObject();
 //                        json.add("command", "time-set");
 //                        json.add("id", simulator.getLastTimeId());
-//                        json.add("params", new JsonObject().add("time", time));
+//                        json.add("parameters", new JsonObject().add("time", time));
 //                        
 //                        for (ClientConnection emu : emulators) {
 //                            emu.send(json);
@@ -74,26 +69,26 @@ public class SimulatorJSONHandler {
                         reply = null; /* do not sent the reply now!!! */
                     }
                 } catch(Exception e) {
-                    reply.add("error", new JsonObject().add("desc", "failed to set time:" + e.getMessage()));
+                    setReplyError(reply, "command-error", "failed to set time:" + e.getMessage());
                 }
             } else {
-                reply.add("error", new JsonObject().add("desc", "only one time controller allowed"));
+                setReplyError(reply, "command-error", "only one time controller allowed");
             }
         } else if (command.equals("transmit")) {
-            String nodeId = json.get("source-node-id").toString();
+            String nodeId = json.get("node-id").toString();
             long tTime = json.get("time").asLong();
             String packetData = json.get("packet-data").asString();
             Node node = simulator.getNode(nodeId);
             RadioMedium medium = simulator.getRadioMedium();
             if (node == null) {
                 log.error("non-existing node sending radio packet: {}", nodeId);
-                reply.add("error", new JsonObject().add("desc", "could not find source node"));
+                setReplyError(reply, "command-error", "could not find source node");
             } else if (medium == null) {
                 log.error("no radio medium available to transmitt radio packet");
-                reply.add("error", new JsonObject().add("desc", "no radio medium available"));
+                setReplyError(reply, "command-error", "no radio medium available");
             } else {
                 RadioPacket packet = new RadioPacket(node, tTime, packetData);
-                JsonValue value = json.get("transmit-power");
+                JsonValue value = json.get("rf-power");
                 if (value != null && value.isNumber()) {
                     packet.setTransmitPower(value.asDouble());
                 }
@@ -104,13 +99,11 @@ public class SimulatorJSONHandler {
                 /* Send packet to listeners (visualizers, etc) and then to radio medium */
                 simulator.notifyRadioListeners(packet);
                 medium.transmit(packet);
-                reply.add("reply", "OK");
             }
 
         } else if (command.equals("log")) {
-            reply.add("reply", "OK");
-            JsonObject params = json.get("params").asObject();
-            String nodeId = "" + params.get("node-id").asInt();
+            JsonObject params = json.get("parameters").asObject();
+            String nodeId = params.get("node-id").toString();
             String logMsg = params.get("message").asString();
             Node node = simulator.getNode(nodeId);
             if(logMsg != null) {
@@ -120,8 +113,8 @@ public class SimulatorJSONHandler {
         } else if (command.equals("node-config-set")) {
             /* add this client connection to the node emulator array */
             /* and possibly create a new node */
-            JsonObject params = json.get("params").asObject();
-            String nodeId = "" + params.get("node-id").asInt();
+            JsonObject params = json.get("parameters").asObject();
+            String nodeId = params.get("node-id").toString();
             Node node = simulator.addNode(nodeId, client);
             JsonValue value = params.get("position");
             if (value != null && value.isArray()) {
@@ -133,7 +126,7 @@ public class SimulatorJSONHandler {
                     node.getPosition().set(position.get(0).asDouble(), position.get(1).asDouble());
                 }
             }
-            value = params.get("transmit-power");
+            value = params.get("rf-power");
             if (value != null && value.isNumber()) {
                 node.getRadio().setTransmitPower(value.asDouble());
             }
@@ -141,13 +134,32 @@ public class SimulatorJSONHandler {
             if (value != null && value.isNumber()) {
                 node.getRadio().setWirelessChannel(value.asInt());
             }
-            reply.add("reply", "OK");
+            value = params.get("radio-state");
+            if (value != null && value.isString()) {
+                String state = value.asString();
+                node.getRadio().setEnabled(!"disabled".equals(state));
+            }
+        } else if (command.equals("configuration-set")) {
+            if (simulator.getTimeController() != null) {
+                setReplyError(reply, "command-error", "already initialized");
+            } else {
+                JsonObject params = json.get("parameters").asObject();
+                JsonValue value = params.get("wireless-standard");
+                if (value != null) {
+                    log.debug("CONFIG: wireless-standard: {}", value);
+                }
+                value = params.get("propagation-option");
+                if (value != null) {
+                    log.debug("CONFIG: propagation-option: {}", value);
+                }
+//                value = params.get("matrix-data");
+            }
         } else if (command.equals("subscribe-event")) {
             log.debug("Adding clienct connection as event listener");
             simulator.addEventListener(client);
         } else {
             /* What did we get here ??? */
-            reply.add("error", new JsonObject().add("desc", "unhandled message."));
+            setReplyError(reply, "command-error", "unsupported command: " + command);
         }
 
         try {
@@ -161,4 +173,18 @@ public class SimulatorJSONHandler {
         return true;
     }
 
+    private JsonObject createReplyObject(long id) {
+        JsonObject reply = new JsonObject();
+        if (id >= 0) {
+            reply.set("id", id);
+        }
+        reply.set("reply", "OK");
+        reply.set("reply-object", new JsonObject());
+        return reply;
+    }
+
+    private void setReplyError(JsonObject reply, String errorClass, String description) {
+        reply.set("reply", "error");
+        reply.set("reply-object", new JsonObject().add("class", errorClass).add("description", description));
+    }
 }

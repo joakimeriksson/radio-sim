@@ -34,7 +34,6 @@ package se.sics.emul8.radiomedium.net;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.charset.StandardCharsets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.Simulator;
@@ -45,7 +44,7 @@ public class Server implements ClientHandler {
 
     private static final Logger log = LoggerFactory.getLogger(Server.class);
 
-    private static final byte[] PROTOCOL_HEADER = "RSIM 1.0\r\n".getBytes(StandardCharsets.US_ASCII);
+//    private static final byte[] PROTOCOL_HEADER = "RSIM 1.0\r\n".getBytes(StandardCharsets.US_ASCII);
 
     private Simulator simulator;
     private SimulatorJSONHandler simulatorJSONHandler;
@@ -59,11 +58,11 @@ public class Server implements ClientHandler {
         this.port = port;
 
         JsonObject rm = new JsonObject();
-        rm.set("name", "Cooja radio medium");
-        rm.set("api-version", "0.0.1");
+        rm.set("name", "RSIM 0.1");
+        rm.set("api-version", "0.5");
 
         welcome = new JsonObject();
-        welcome.set("radio-medium", rm);
+        welcome.set("radio-simulator", rm);
         welcome.set("status", "OK");
     }
 
@@ -102,7 +101,7 @@ public class Server implements ClientHandler {
                         log.debug("New client from {}", clientHost);
                         try {
                             JSONClientConnection client = new JSONClientConnection(Server.this, socket);
-                            client.sendRawData(PROTOCOL_HEADER);
+//                            client.sendRawData(PROTOCOL_HEADER);
                             addClient(client);
                             client.start();
                             if (welcome != null) {

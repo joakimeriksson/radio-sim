@@ -21,21 +21,24 @@ public class UDGMRadioMedium extends AbstractRadioMedium {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return "UDGM Radio Medium";
     }
 
     @Override
     public void transmit(RadioPacket packet) {
         Node[] nodes = simulator.getNodes();
-        double rssi = 0.0;
+        double rssi = packet.getTransmitPower();
+        int channel = packet.getWirelessChannel();
         Node source = packet.getSource();
         if (nodes != null) {
             for (Node node : nodes) {
                 if (node != source) {
-                    double distance = source.getPosition().getDistance(node.getPosition());
-                    if(distance < range) {
-                      simulator.deliverRadioPacket(packet, node, rssi);
+                    Transciever radio = node.getRadio();
+                    if (radio.isEnabled() && radio.getWirelessChannel() == channel) {
+                        double distance = source.getPosition().getDistance(node.getPosition());
+                        if(distance < range) {
+                            simulator.deliverRadioPacket(packet, node, rssi);
+                        }
                     }
                 }
             }

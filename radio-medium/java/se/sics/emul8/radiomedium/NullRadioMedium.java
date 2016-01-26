@@ -55,12 +55,15 @@ public class NullRadioMedium extends AbstractRadioMedium {
 
         // Send packet to all nodes
         Node[] nodes = simulator.getNodes();
-        double rssi = 0.0;
+        double rssi = packet.getTransmitPower();
+        int channel = packet.getWirelessChannel();
+        Node source = packet.getSource();
         if (nodes != null) {
             for (Node node : nodes) {
-                if (node != packet.getSource()) {
-                    /* Just send if they are on same channel - no loss - no collissions - infinite range */
-                    if(node.getRadio().getWirelessChannel() == packet.getWirelessChannel()) {
+                if (node != source) {
+                    Transciever radio = node.getRadio();
+                    /* Just send if they are on same channel - no loss - no collisions - infinite range */
+                    if(radio.isEnabled() && radio.getWirelessChannel() == channel) {
                         simulator.deliverRadioPacket(packet, node, rssi);
                     }
                 }

@@ -264,8 +264,10 @@ public class CoojaScriptParser {
         return timeoutTime;
       }
 
-      public class ScriptSyntaxErrorException extends ScriptException {
-        public ScriptSyntaxErrorException(String msg) {
+      public static class ScriptSyntaxErrorException extends ScriptException {
+		private static final long serialVersionUID = 6814935324962823524L;
+
+		public ScriptSyntaxErrorException(String msg) {
           super(msg);
         }
       }

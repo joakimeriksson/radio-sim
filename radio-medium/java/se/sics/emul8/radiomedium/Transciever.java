@@ -4,10 +4,18 @@ public class Transciever {
     
     private double txpower = 0.0;
     private int wirelessChannel = 26;
+    private boolean isEnabled = true;
 
-    
     public double getTransmitPower() {
         return this.txpower;
+    }
+
+    public boolean isEnabled() {
+        return this.isEnabled;
+    }
+
+    public void setEnabled(boolean isEnabled) {
+        this.isEnabled  = isEnabled;
     }
 
     public void setTransmitPower(double txpower) {
