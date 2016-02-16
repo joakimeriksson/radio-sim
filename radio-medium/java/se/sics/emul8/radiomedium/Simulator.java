@@ -215,7 +215,7 @@ public class Simulator {
         return node;
     }
 
-    protected Node removeNode(String nodeId) {
+    public Node removeNode(String nodeId) {
         Node node;
         synchronized (nodeTable) {
             node = nodeTable.get(nodeId);
