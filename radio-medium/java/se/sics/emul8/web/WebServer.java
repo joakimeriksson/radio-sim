@@ -61,16 +61,15 @@ public class WebServer extends AbstractHandler {
             String name = rm.getName();
             response.getWriter().println("Radio medium:" + name + "<br>");
             
-            se.sics.emul8.radiomedium.net.Server srv = simulator.getServer();
-            ClientConnection[] clients = srv.getClients();
+            ClientConnection[] clients = simulator.getEmulators();
             if(clients != null) {
-                response.getWriter().println("Clients: <ul>");
+                response.getWriter().println("Emulators: <ul>");
                 for(int i = 0; i < clients.length; i++) {
                     response.getWriter().println("<li>" + clients[i].getName() + "<br>");
                 }
                 response.getWriter().println("</ul>");
             } else {
-                response.getWriter().println("No clients connected.<br>");
+                response.getWriter().println("No emulators connected.<br>");
             }
         } else {
             response.getWriter().println("No simulator set<br>");

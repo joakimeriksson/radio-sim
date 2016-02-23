@@ -54,7 +54,6 @@ public class Main {
         simulator.setRadioMedium(radioMedium);
         Server server = new Server(Simulator.DEFAULT_PORT);
         server.setSimulator(simulator);
-        simulator.setServer(server);
         server.start();
 
         /* Quick hack to get a small web server running - for providing simulation info */

@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import se.sics.emul8.radiomedium.net.ClientConnection;
-import se.sics.emul8.radiomedium.net.Server;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
 
 public class Simulator {
@@ -57,7 +56,6 @@ public class Simulator {
     
     private long time;
     private long stepTime;
-    private Server server;
     private ClientConnection timeController = null;
     private ClientConnection[] emulators;
     private ClientConnection[] eventListeners;
@@ -158,15 +156,6 @@ public class Simulator {
     
     public void processAllEvents(long time) {
         /* process all the events in the event queue until time is time */
-    }
-
-    public Server getServer() {
-        return server;
-    }
-
-    public void setServer(Server server) {
-        this.server = server;
-        time = 0;
     }
 
     public RadioMedium getRadioMedium() {

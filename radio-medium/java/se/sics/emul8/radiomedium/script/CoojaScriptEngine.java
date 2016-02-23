@@ -297,7 +297,6 @@ public class CoojaScriptEngine {
         simulator.setRadioMedium(radioMedium);
         Server server = new Server(Simulator.DEFAULT_PORT);
         server.setSimulator(simulator);
-        simulator.setServer(server);
         server.start();
 
         CoojaScriptEngine engine = new CoojaScriptEngine(simulator);
