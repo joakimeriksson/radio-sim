@@ -60,7 +60,7 @@ public class TestEmulator implements ClientHandler {
     }
 
     private JsonObject createCommand(String cmd, JsonObject params) {
-        JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("params", params);
+        JsonObject jsonCmd = new JsonObject().add("command", cmd).add("parameters", params);
         return jsonCmd;
     }
     
@@ -68,7 +68,7 @@ public class TestEmulator implements ClientHandler {
         JsonObject reqNode = createCommand("node-config-set", new JsonObject().add("node-id", nodeId));
         JsonObject transmit = new JsonObject();
         transmit.add("command", "transmit");
-        transmit.add("source-node-id", nodeId);
+        transmit.add("node-id", nodeId);
         transmit.add("packet-data", "0102030405");
         try {
             clientConnection.send(reqNode);
@@ -102,7 +102,7 @@ public class TestEmulator implements ClientHandler {
 
         if (cmd != null) {
             if (cmd.equals("time-set")) {
-                JsonObject params = (JsonObject) json.get("params"); 
+                JsonObject params = json.get("parameters").asObject();
                 myTime = params.getLong("time", 0);
                 System.out.println("Accepting time elapsed." + myTime);
                 reply.set("reply", "OK");

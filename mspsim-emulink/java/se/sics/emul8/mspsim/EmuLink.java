@@ -91,7 +91,7 @@ public class EmuLink implements ClientHandler {
     }
     
     private JsonObject createCommand(String cmd, JsonObject params) {
-        JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("params", params);
+        JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("parameters", params);
         return jsonCmd;
     }
 
@@ -126,10 +126,10 @@ public class EmuLink implements ClientHandler {
     }
     
     void sendPacket(int nodeId, byte[] packet) throws IOException {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         JsonObject transmit = new JsonObject();
         transmit.add("command", "transmit");
-        transmit.add("source-node-id", nodeId);
+        transmit.add("node-id", nodeId);
         for(int i = 0; i < packet.length; i++) {
             sb.append(hex(packet[i]));
         }
@@ -142,7 +142,7 @@ public class EmuLink implements ClientHandler {
         JsonObject timeMessage = new JsonObject();
         JsonObject params = new JsonObject();
         timeMessage.add("command", "time-set");
-        timeMessage.add("params", params);
+        timeMessage.add("parameters", params);
         connect();
         /* register all the nodes */
         try {
@@ -198,7 +198,7 @@ public class EmuLink implements ClientHandler {
 
         } else if (cmd != null) {
             if (cmd.equals("time-set")) {
-                JsonObject params = (JsonObject) json.get("params"); 
+                JsonObject params = json.get("parameters").asObject();
                 long newTime = params.getLong("time", 0);
 //                System.out.println("Accepting time elapsed." + (newTime - myTime));
                 if (newTime > myTime) {
@@ -216,7 +216,7 @@ public class EmuLink implements ClientHandler {
                     e.printStackTrace();
                 }
             } else if (cmd.equals("transmit") || cmd.equals("receive")) {
-                String destId = json.getString("destination-node-id", null);
+                String destId = json.getString("node-id", null);
                 /* all packets should go into the radio? */
                 String data = json.getString("packet-data", null);
                 System.out.println("Transmission for node: " + destId + " " + data);
@@ -255,7 +255,7 @@ public class EmuLink implements ClientHandler {
         if(config.getPropertyAsBoolean("yaml", false)) {
             Yaml yaml = new Yaml();
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-            StringBuffer buf = new StringBuffer();
+            StringBuilder buf = new StringBuilder();
             String line = "";
             /* this will only allow non-empty lines... */
             while(line != null) {
@@ -263,7 +263,7 @@ public class EmuLink implements ClientHandler {
                 if(line.equals("")) {
                     line = null;
                 } else {
-                    buf.append(line + "\n");
+                    buf.append(line).append('\n');
                 }
             }
             reader.close();

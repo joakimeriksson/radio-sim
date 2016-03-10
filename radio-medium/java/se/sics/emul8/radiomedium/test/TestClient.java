@@ -58,7 +58,7 @@ public class TestClient implements ClientHandler {
     }
 
     private JsonObject createCommand(String cmd, JsonObject params) {
-        JsonObject jsonCmd = new JsonObject().add("command",  cmd).add("params", params);
+        JsonObject jsonCmd = new JsonObject().add("command", cmd).add("parameters", params);
         return jsonCmd;
     }
     

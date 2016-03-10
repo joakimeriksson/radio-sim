@@ -186,7 +186,6 @@ public class JSONClientConnection extends ClientConnection {
                         JsonObject json = JsonObject.readFrom(sb.toString());
                         sb.setLength(0);
                         isParsingJSON = false;
-                        log.debug("JSON without len received.");
                         if (!clientHandler.handleMessage(this, json)) {
                             // This connection should no longer be kept alive
                             break;
