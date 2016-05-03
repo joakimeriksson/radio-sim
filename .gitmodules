@@ -1,3 +1,10 @@
 [submodule "mspsim"]
 	path = mspsim
 	url = https://github.com/mspsim/mspsim.git
+	branch = master
+	ignore = dirty
+[submodule "jipv6"]
+	path = jipv6
+	url = git@github.com:joakimeriksson/jipv6.git
+	branch = master
+	ignore = dirty
