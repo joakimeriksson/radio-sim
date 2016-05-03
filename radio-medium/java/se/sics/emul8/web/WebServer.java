@@ -37,19 +37,31 @@ import java.io.IOException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 
+import se.sics.emul8.radiomedium.RadioListener;
 import se.sics.emul8.radiomedium.RadioMedium;
+import se.sics.emul8.radiomedium.RadioPacket;
 import se.sics.emul8.radiomedium.Simulator;
 import se.sics.emul8.radiomedium.net.ClientConnection;
+import se.sics.jipv6.analyzer.ExampleAnalyzer;
+import se.sics.jipv6.analyzer.JShark;
+import se.sics.jipv6.pcap.CapturedPacket;
+import se.sics.jipv6.server.SnifferServer;
 
 public class WebServer extends AbstractHandler {
 
     Server server;    
     Simulator simulator;
-    
+    JShark jshark;
+    SnifferServer sniffer;
+
     @Override
     public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
         response.setContentType("text/html; charset=utf-8");
@@ -76,17 +88,42 @@ public class WebServer extends AbstractHandler {
         }
         baseRequest.setHandled(true);
     }
+
     
     public void setSimulator(Simulator simulator) {
         // TODO Auto-generated method stub
         this.simulator = simulator;
+        sniffer = new SnifferServer();
+        jshark = new JShark(new ExampleAnalyzer(), sniffer.getOutput());
+        simulator.addRadioListener(new RadioListener() {
+            @Override
+            public void packetTransmission(RadioPacket packet) {
+                CapturedPacket capPacket = new CapturedPacket(packet.getTime(), packet.getPacketDataAsBytes());
+                try {
+                    jshark.packetData(capPacket);                    
+                } catch (Exception e) {
+                    // TODO: handle exception
+                }
+            }
+        });
     }
 
     public void startWS() {
         Runnable r = new Runnable() {
             public void run() {
                 server = new Server(8080);
-                server.setHandler(WebServer.this);
+                ContextHandler context = new ContextHandler("/");
+                context.setContextPath("/");
+                context.setHandler(WebServer.this);
+
+                ContextHandler contextSniff = new ContextHandler("/sniffer");
+                contextSniff.setHandler(sniffer = new SnifferServer());
+                sniffer.setSniffer(jshark);
+                
+                ContextHandlerCollection contexts = new ContextHandlerCollection();
+                contexts.setHandlers(new Handler[] { context, contextSniff });
+                
+                server.setHandler(contexts);
                 try {
                     System.out.println("Starting jetty web server at 8080");
                     server.start();

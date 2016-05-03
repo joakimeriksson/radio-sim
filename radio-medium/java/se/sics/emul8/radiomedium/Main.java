@@ -41,7 +41,7 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         // web server on - or - off
-        boolean web = false;
+        boolean web = true;
         if (System.getProperty("logback.configurationFile") == null) {
             System.setProperty("logback.configurationFile", "logback.xml");
         }
