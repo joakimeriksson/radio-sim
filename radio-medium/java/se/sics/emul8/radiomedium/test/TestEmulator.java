@@ -101,7 +101,7 @@ public class TestEmulator implements ClientHandler {
         }
 
         if (cmd != null) {
-            if (cmd.equals("time-set")) {
+            if (cmd.equals("time-step")) {
                 JsonObject params = json.get("parameters").asObject();
                 myTime = params.getLong("time", 0);
                 System.out.println("Accepting time elapsed." + myTime);

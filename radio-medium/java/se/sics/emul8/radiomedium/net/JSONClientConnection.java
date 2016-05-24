@@ -341,7 +341,7 @@ public class JSONClientConnection extends ClientConnection {
                 log.debug("Could not send step-time...");
             }
         } catch (IOException e) {
-            log.error("failed to deliver time-set", e);
+            log.error("failed to deliver time-step", e);
         }
     }
     
