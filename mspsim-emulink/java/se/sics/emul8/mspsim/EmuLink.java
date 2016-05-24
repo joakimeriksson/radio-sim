@@ -25,7 +25,6 @@ import se.sics.mspsim.core.Memory;
 import se.sics.mspsim.core.OperatingModeListener;
 import se.sics.mspsim.core.USART;
 import se.sics.mspsim.platform.GenericNode;
-import se.sics.mspsim.platform.sky.CC2420Node;
 import se.sics.mspsim.util.ArgumentManager;
 import se.sics.mspsim.util.ComponentRegistry;
 import se.sics.mspsim.util.MapEntry;
@@ -348,28 +347,26 @@ public class EmuLink implements ClientHandler {
         }
         node.setupArgs(config);
 
-        System.out.println("**** ID = " + nodeId);
-        
         DS2411 ds2411 = node.getCPU().getChip(DS2411.class);
         if (ds2411 != null) {
-            System.out.println("Setting MAC/NodeID");
-            if(node instanceof CC2420Node) {
-                if (nodeId == -1) {
-                    nodeId = ((int)(Math.random() * 255)) & 0xff;
-                }
-                ((CC2420Node) node).setNodeID(nodeId);
+            if (nodeId == -1) {
+                nodeId = ((int)(Math.random() * 255)) & 0xff;
             }
+            System.out.println("Setting MAC/NodeID to " + nodeId);
+            ds2411.setMACID(nodeId & 0xff, nodeId & 0xff, nodeId & 0xff, (nodeId >> 8) & 0xff, nodeId & 0xff, nodeId & 0xff);
         }
-        
+
+        System.out.println("**** ID = " + nodeId);
 
         ComponentRegistry r = node.getRegistry();
 
         /* Only works with 802154 radio for now */
         Radio802154 radio = node.getCPU().getChip(Radio802154.class);
         System.out.println("Radio:" + radio);
-        radio.setRSSI(-100); /* needed to set the CCA to 1 */
         RadioWrapper wradio = null;
         if(radio != null) {
+            radio.setRSSI(-100); /* needed to set the CCA to 1 */
+
             System.out.println("*** Installing radio listener...");
             wradio = new RadioWrapper(radio);
             radio.addOperatingModeListener(new OperatingModeListener() {
