@@ -59,7 +59,7 @@ public class Server implements ClientHandler {
 
         JsonObject rm = new JsonObject();
         rm.set("name", "RSIM 0.1");
-        rm.set("api-version", "0.5");
+        rm.set("api-version", "0.6");
 
         welcome = new JsonObject();
         welcome.set("radio-simulator", rm);

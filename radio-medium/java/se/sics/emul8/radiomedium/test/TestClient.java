@@ -46,8 +46,9 @@ public class TestClient implements ClientHandler {
     private static final Logger log = LoggerFactory.getLogger(ClientHandler.class);
 
     private final JSONClientConnection clientConnection;
-    private int timeSetId = 0;
-    
+    private long timeSetId = -1;
+    private volatile boolean isWaitingForTimeSet = false;
+
     public TestClient(String host, int port) throws IOException {
         this.clientConnection = new JSONClientConnection(this, host, port);
         this.clientConnection.start();
@@ -70,10 +71,15 @@ public class TestClient implements ClientHandler {
             try {
                 Thread.sleep(1000);
                 clientConnection.send(timeReq);
-                time = time + 1000000;
-                JsonObject timeSet = createCommand("time-set", new JsonObject().add("time", time));
-                timeSet.set("id", timeSetId++);
-                clientConnection.send(timeSet);
+                if (isWaitingForTimeSet) {
+                    log.debug("*** still waiting for time set reply");
+                } else {
+                    time = time + 1000000;
+                    JsonObject timeSet = createCommand("time-set", new JsonObject().add("time", time));
+                    timeSet.set("id", ++timeSetId);
+                    isWaitingForTimeSet = true;
+                    clientConnection.send(timeSet);
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -86,6 +92,18 @@ public class TestClient implements ClientHandler {
     @Override
     public boolean handleMessage(ClientConnection clientConnection, JsonObject json) {
         System.out.println("RECV: " + json);
+        String replyStatus = json.getString("reply", null);
+        if (replyStatus != null) {
+            long id = json.getLong("id", -1);
+            if ("OK".equals(replyStatus)) {
+                if (id >= 0 && isWaitingForTimeSet && id == timeSetId) {
+                    isWaitingForTimeSet = false;
+                }
+                return true;
+            }
+            log.error("error reply: {}", json);
+            return true;
+        }
         return true;
     }
 

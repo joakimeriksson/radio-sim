@@ -27,9 +27,9 @@ public class SimulatorJSONHandler {
     public boolean handleMessage(ClientConnection client, JsonObject json) {
         long time = simulator.getTime();
         log.debug("Got: {}", json);
-        String replyStr = json.getString("reply", null);
-        if (replyStr != null) {
-            return handleReply(client, json, replyStr);
+        String replyStatus = json.getString("reply", null);
+        if (replyStatus != null) {
+            return handleReply(client, json, replyStatus);
         }
 
         long id = json.getLong("id", -1);
@@ -60,7 +60,7 @@ public class SimulatorJSONHandler {
         } else if (command.equals("transmit")) {
             String nodeId = json.get("node-id").toString();
             long tTime = json.get("time").asLong();
-            String packetData = json.get("packet-data").asString();
+            String packetData = json.getString("packet-data", "");
             Node node = simulator.getNode(nodeId);
             RadioMedium medium = simulator.getRadioMedium();
             if (node == null) {
@@ -124,6 +124,16 @@ public class SimulatorJSONHandler {
                 String state = value.asString();
                 node.getRadio().setEnabled(!"disabled".equals(state));
             }
+
+            // Add node-info
+            JsonObject nodeInfo = new JsonObject();
+            nodeInfo.add("node_id", nodeId);
+            // TODO add radio state and RSSI
+//            nodeInfo.add("rssi", 0);
+//            nodeInfo.add("receiving", 0);
+            nodeInfo.add("wireless-channel", node.getRadio().getWirelessChannel());
+            reply.set("reply-object", new JsonObject().add("node-info", nodeInfo));
+
         } else if (command.equals("configuration-set")) {
             if (simulator.getTimeController() != null) {
                 setReplyError(reply, "command-error", "already initialized");
@@ -137,10 +147,10 @@ public class SimulatorJSONHandler {
                 if (value != null) {
                     log.debug("CONFIG: propagation-option: {}", value);
                 }
-//                value = params.get("matrix-data");
+//                value = params.get("data");
             }
         } else if (command.equals("subscribe-event")) {
-            log.debug("Adding clienct connection as event listener");
+            log.debug("Adding client connection as event listener");
             simulator.addEventListener(client);
         } else {
             /* What did we get here ??? */
@@ -161,8 +171,9 @@ public class SimulatorJSONHandler {
     private boolean handleReply(ClientConnection client, JsonObject json, String replyStatus) {
         long id = json.getLong("id", -1);
         if ("OK".equals(replyStatus)) {
-            /* The simulator will check if this is an expected time step reply */
-            simulator.emulatorTimeStepped(client, id, Simulator.TIME_STEP_OK);
+            if (id >= 0 && id == simulator.getWaitingForTimeId()) {
+                simulator.emulatorTimeStepped(client, id, Simulator.TIME_STEP_OK);
+            }
             return true;
         }
         log.error("{} error reply: {}", client.getName(), json);

@@ -42,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 
 import se.sics.emul8.radiomedium.Node;
@@ -332,10 +333,13 @@ public class JSONClientConnection extends ClientConnection {
     /* tell emulators to run until a specific time */
     public void emulateToTime(long time, long timeId) {
         JsonObject json = new JsonObject();
+        JsonArray nodeInfos = new JsonArray();
+
+        // TODO add relevant node info
+
         json.add("command", "time-step");
         json.add("id", timeId);
-        json.add("parameters", new JsonObject().add("time", time));
-        // TODO add node info
+        json.add("parameters", new JsonObject().add("time", time).add("node-info", nodeInfos));
         try {
             if(!send(json)) {
                 log.debug("Could not send step-time...");

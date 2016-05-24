@@ -35,11 +35,11 @@
 package se.sics.emul8.radiomedium;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.LongUnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.botbox.scheduler.EventQueue;
-import com.botbox.scheduler.TimeEvent;
 
 import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
@@ -75,7 +75,11 @@ public class Simulator {
     private ConcurrentHashMap<String, Node> nodeTable = new ConcurrentHashMap<String, Node>();
     private Node[] nodes = NO_NODES;
 
-    public long getWatitingForTimeId() {
+    public boolean isWaitingForTimeStep() {
+        return waitingForTimeId >= 0;
+    }
+
+    public long getWaitingForTimeId() {
         return waitingForTimeId;
     }
 
@@ -90,7 +94,11 @@ public class Simulator {
     public long getTime() {
         return currentTime;
     }
-    
+
+    public long getNextMessageId() {
+      return simulatorMessageId.updateAndGet(unsignedIncrementOperator);
+    }
+
     public void addEventListener(ClientConnection client) {
         this.eventListeners = ArrayUtils.add(ClientConnection.class, this.eventListeners, client);
     }
@@ -101,10 +109,11 @@ public class Simulator {
 
     public void emulatorTimeStepped(ClientConnection client, long id, long timeStepOk) {
 //        log.debug("Got time stepped to " + time + " id:"  + id + " OK:" + timeStepOk + " waitingFor:" + waitingForTimeId + " Emu:" + emulatorsLeft);
-        if(id == this.waitingForTimeId) {
+        if (this.waitingForTimeId < 0) {
+            // Not waiting for a time step to finish
+        } else if(id == this.waitingForTimeId) {
             if (client.setTime(stepTime, id)) {
                 emulatorsLeft--;
-                System.out.print("" + emulatorsLeft);
             } else {
                 /* What to do here? */
                 log.debug("ClientConnection did not accept time stepped call");
@@ -114,14 +123,19 @@ public class Simulator {
                 emulatorTimeStepDone();
             }
         } else {
-            log.debug("Wrong ID for emulatorTimeStepped:{} got {}", waitingForTimeId, id);
+            // This is not the id we are waiting for
+            log.debug("waiting for Wrong ID for emulatorTimeStepped:{} got {}", waitingForTimeId, id);
         }
     }
 
     private void emulatorTimeStepDone() {
-        currentTime = stepTime;
+        this.currentTime = stepTime;
+        this.waitingForTimeId = -1;
+
         /* this should be handled in other thread? */
         processAllEvents(currentTime);
+
+        // Notify the time controller that we now have stepped to the specified time.
         getTimeController().timeStepDone(this.timeControllerLastTimeId);
     }
 
@@ -134,7 +148,7 @@ public class Simulator {
         if (emulatorsLeft > 0) {
             log.warn("*** still waiting for {} clients when stepping time again to {}", emulatorsLeft, time);
         }
-        waitingForTimeId = simulatorMessageId.incrementAndGet();
+        waitingForTimeId = getNextMessageId();
         timeControllerLastTimeId = id;
         stepTime = time;
         if (emulators == null) {
@@ -287,8 +301,14 @@ public class Simulator {
             log.error("Node {} has no client connection", destination.getId());
             return;
         }
-        cc.sendPacket(packet, destination, this.simulatorMessageId.incrementAndGet(), rssi);
+        cc.sendPacket(packet, destination, this.getNextMessageId(), rssi);
     }
 
+    private static final LongUnaryOperator unsignedIncrementOperator = new LongUnaryOperator() {
 
+        @Override public long applyAsLong(long value) {
+            return value == Long.MAX_VALUE ? 0 : (value + 1);
+        }
+
+    };
 }
