@@ -8,5 +8,6 @@
 	<classpathentry kind="lib" path="lib/logback-core-1.1.2.jar"/>
 	<classpathentry kind="lib" path="lib/slf4j-api-1.7.7.jar"/>
 	<classpathentry kind="lib" path="lib/jetty-all-9.3.3.v20150827-uber.jar"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/jipv6"/>
 	<classpathentry kind="output" path="out"/>
 </classpath>
