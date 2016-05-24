@@ -34,6 +34,8 @@
 package se.sics.emul8.web;
 
 import java.io.IOException;
+import java.util.Arrays;
+
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -98,7 +100,9 @@ public class WebServer extends AbstractHandler {
         simulator.addRadioListener(new RadioListener() {
             @Override
             public void packetTransmission(RadioPacket packet) {
-                CapturedPacket capPacket = new CapturedPacket(packet.getTime(), packet.getPacketDataAsBytes());
+                byte[] data = packet.getPacketDataAsBytes();
+                CapturedPacket capPacket = new CapturedPacket(packet.getTime(), Arrays.copyOfRange(data, 1, data.length));
+                System.out.println("Packet received and sent on to jshark len:" + (packet.getPacketDataAsBytes().length - 1));
                 try {
                     jshark.packetData(capPacket);                    
                 } catch (Exception e) {
@@ -117,7 +121,7 @@ public class WebServer extends AbstractHandler {
                 context.setHandler(WebServer.this);
 
                 ContextHandler contextSniff = new ContextHandler("/sniffer");
-                contextSniff.setHandler(sniffer = new SnifferServer());
+                contextSniff.setHandler(sniffer);
                 sniffer.setSniffer(jshark);
                 
                 ContextHandlerCollection contexts = new ContextHandlerCollection();
