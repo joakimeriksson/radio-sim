@@ -4,8 +4,10 @@
   </description>
 
   <property name="src" location="java"/>
+  <property name="jipv6-src" location="../jipv6/src"/>
   <property name="build" location="build"/>
   <property name="lib" location="lib"/>
+  <property name="jipv6-lib" location="../jipv6/lib"/>
   <property name="jarfile" location="emul8-radio-medium.jar"/>
   <property name="javac.debug" value="true"/>
   <!-- <property name="ant.build.javac.source" value="1.8"/> -->
@@ -14,6 +16,7 @@
 
   <path id="classpath">
     <fileset dir="${lib}" includes="**/*.jar"/>
+    <fileset dir="${jipv6-lib}" includes="**/*.jar"/>
   </path>
 
   <manifestclasspath property="jar.classpath" jarfile="${jarfile}">
@@ -26,6 +29,11 @@
   </target>
 
   <target name="compile" depends="init" description="compile the source">
+    <javac srcdir="${jipv6-src}" destdir="${build}" classpathref="classpath"
+           debug="${javac.debug}" includeantruntime="false">
+      <compilerarg value="-Xlint:unchecked"/>
+      <compilerarg value="-deprecation"/>
+    </javac>
     <javac srcdir="${src}" destdir="${build}" classpathref="classpath"
            debug="${javac.debug}" includeantruntime="false">
       <compilerarg value="-Xlint:unchecked"/>
