@@ -64,7 +64,7 @@ public class NullRadioMedium extends AbstractRadioMedium {
                     Transciever radio = node.getRadio();
                     /* Just send if they are on same channel - no loss - no collisions - infinite range */
                     if(radio.isEnabled() && radio.getWirelessChannel() == channel) {
-                        simulator.deliverRadioPacket(packet, node, rssi);
+                        simulator.generateTransmissionEvents(packet, node, rssi);
                     }
                 }
             }

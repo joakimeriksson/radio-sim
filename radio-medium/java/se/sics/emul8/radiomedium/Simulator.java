@@ -37,6 +37,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.botbox.scheduler.EventQueue;
+import com.botbox.scheduler.TimeEvent;
+
+import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
 
@@ -47,6 +52,8 @@ public class Simulator {
     
     private static final Node[] NO_NODES = new Node[0];
 
+    private EventQueue eventQueue = new EventQueue();
+    
     /* Responses, etc from emulators */
     public static final long TIME_STEP_OK = 0;
 
@@ -153,9 +160,13 @@ public class Simulator {
             }
         }
     }
-    
-    public void processAllEvents(long time) {
-        /* process all the events in the event queue until time is time */
+
+    /* process all the events in the event queue until time is time */
+    private void processAllEvents(long time) {
+        long nextTime = 0;
+        while ((nextTime = eventQueue.nextTime()) != -1 && nextTime < time) {
+            eventQueue.popFirst().execute(time);
+        }
     }
 
     public RadioMedium getRadioMedium() {
@@ -246,6 +257,19 @@ public class Simulator {
         }
     }
  
+    public void generateTransmissionEvents(RadioPacket packet, Node destination, double rssi) {
+        TransmissionEvent teStart = new TransmissionEvent(time, this, packet, destination, rssi, true);
+        TransmissionEvent teEnd;
+        
+        teEnd = new TransmissionEvent(time + packet.getPacketAirTime(), this, packet, destination, rssi, true);
+        eventQueue.addEvent(teStart);
+        eventQueue.addEvent(teEnd);
+    }
+    
+    /*  
+     * Deliver a radio packet to a specific destination node.
+     * 
+    */
     public void deliverRadioPacket(RadioPacket packet, Node destination, double rssi) {
         ClientConnection cc = destination.getClientConnection();
         if (cc == null || !cc.isConnected()) {

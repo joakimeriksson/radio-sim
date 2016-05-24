@@ -2,6 +2,11 @@ package se.sics.emul8.radiomedium;
 
 import java.util.HashMap;
 
+/*
+ * Simulaton event that contains information about packets, configuration and log information for
+ * all event listenrs - NOTE: this is for monitoring, visualization, etc. Not actual packets sent
+ * between nodes.
+ */
 public class SimulationEvent {
     public enum EventType {
         RADIO_PACKET,
