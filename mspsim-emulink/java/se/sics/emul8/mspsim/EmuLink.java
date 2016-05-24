@@ -245,6 +245,7 @@ public class EmuLink implements ClientHandler {
 
         ArgumentManager config = new ArgumentManager();
         config.handleArguments(args);
+        config.setProperty("cli", "false");
 
         int nodeId = config.getPropertyAsInt("id", -1);
         boolean isTimeController = config.getPropertyAsBoolean("timectrl", false);
@@ -258,10 +259,10 @@ public class EmuLink implements ClientHandler {
             StringBuilder buf = new StringBuilder();
             String line = "";
             /* this will only allow non-empty lines... */
-            while(line != null) {
-                line = reader.readLine();
+            while((line = reader.readLine()) != null) {
                 if(line.equals("")) {
-                    line = null;
+                    // Break at first empty line?
+                    break;
                 } else {
                     buf.append(line).append('\n');
                 }
