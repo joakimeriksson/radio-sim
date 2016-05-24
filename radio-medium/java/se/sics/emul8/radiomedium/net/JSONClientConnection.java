@@ -156,15 +156,14 @@ public class JSONClientConnection extends ClientConnection {
                 close();
                 break;
             }
-            if (c == '{' && !isParsingJSON) {
+            if (c == '{') {
                 isParsingJSON = true;
-            }
-            if (c == '\r') {
-                // Ignore CR
-                continue;
             }
 
             if (isParsingJSON) {
+                if (c == '\r' && !stuffed && !quoted) {
+                    continue;
+                }
                 sb.append((char) c);
 
                 if (stuffed) {
@@ -192,6 +191,11 @@ public class JSONClientConnection extends ClientConnection {
                         }
                     }
                 }
+                continue;
+            }
+
+            if (c == '\r') {
+                // Ignore CR
                 continue;
             }
 
