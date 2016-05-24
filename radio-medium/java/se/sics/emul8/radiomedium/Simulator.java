@@ -257,10 +257,14 @@ public class Simulator {
     }
  
     public void generateTransmissionEvents(RadioPacket packet, Node destination, double rssi) {
-        TransmissionEvent teStart = new TransmissionEvent(time, this, packet, destination, rssi, true);
+        long packetTime = packet.getTime();
+        if (packetTime < currentTime) {
+            packetTime = currentTime;
+        }
+        TransmissionEvent teStart = new TransmissionEvent(packetTime, this, packet, destination, rssi, true);
         TransmissionEvent teEnd;
         
-        teEnd = new TransmissionEvent(time + packet.getPacketAirTime(), this, packet, destination, rssi, true);
+        teEnd = new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, true);
         eventQueue.addEvent(teStart);
         eventQueue.addEvent(teEnd);
     }
