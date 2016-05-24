@@ -26,19 +26,18 @@ public class SimulatorJSONHandler {
 
     public boolean handleMessage(ClientConnection client, JsonObject json) {
         long time = simulator.getTime();
-        ClientConnection[] emulators = simulator.getEmulators();
         log.debug("Got: {}", json);
+        String replyStr = json.getString("reply", null);
+        if (replyStr != null) {
+            return handleReply(client, json, replyStr);
+        }
+
         long id = json.getLong("id", -1);
         JsonObject reply = createReplyObject(id);
         String command = json.getString("command", null);
-        String replyStr = json.getString("reply", null);
-        /* Assumed to be a time-set reply ???*/
-        if (replyStr != null && replyStr.equals("OK")) {
-            simulator.emulatorTimeStepped(client, id, Simulator.TIME_STEP_OK);
-            reply = null; /* no reply */
-        }
         if (command == null) {
-
+//          No command specified
+            setReplyError(reply, "command-error", "no command specified");
         } else if (command.equals("time-get")) {
             reply.add("reply-object",new JsonObject().add("time", time));
         } else if (command.equals("time-set")) {
@@ -49,6 +48,7 @@ public class SimulatorJSONHandler {
                 /* risky stuff ... */
                 try {
                     time = json.get("parameters").asObject().get("time").asLong();
+                    ClientConnection[] emulators = simulator.getEmulators();
                     if (emulators != null) {
                         // Allocate new sequence number for the command
                         simulator.stepTime(time, id);
@@ -124,6 +124,8 @@ public class SimulatorJSONHandler {
                             position.get(2).asDouble());
                 } else if (position.size() > 1) {
                     node.getPosition().set(position.get(0).asDouble(), position.get(1).asDouble());
+                } else {
+                    // Illegal position
                 }
             }
             value = params.get("rf-power");
@@ -162,14 +164,25 @@ public class SimulatorJSONHandler {
             setReplyError(reply, "command-error", "unsupported command: " + command);
         }
 
-        try {
-            /* Send a JSON reply - hopefully it is JSON */
-            if (reply != null) {
+        if (reply != null) {
+            try {
+                /* Send a JSON reply - hopefully it is JSON */
                 ((JSONClientConnection) client).send(reply);
+            } catch (IOException e) {
+                log.error("failed to reply to client", e);
             }
-        } catch (IOException e) {
-            log.error("failed to reply to client", e);
         }
+        return true;
+    }
+
+    private boolean handleReply(ClientConnection client, JsonObject json, String replyStatus) {
+        long id = json.getLong("id", -1);
+        if ("OK".equals(replyStatus)) {
+            /* The simulator will check if this is an expected time step reply */
+            simulator.emulatorTimeStepped(client, id, Simulator.TIME_STEP_OK);
+            return true;
+        }
+        log.error("{} error reply: {}", client.getName(), json);
         return true;
     }
 

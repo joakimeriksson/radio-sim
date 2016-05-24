@@ -61,13 +61,13 @@ public class Simulator {
 
     private RadioListener[] radioListeners = null;
     
-    private long time;
+    private long currentTime;
     private long stepTime;
     private ClientConnection timeController = null;
     private ClientConnection[] emulators;
     private ClientConnection[] eventListeners;
     private int emulatorsLeft = 0;
-    private long lastTimeId = -1;
+    private long timeControllerLastTimeId = -1;
     private long waitingForTimeId = -1;
 
     private AtomicLong simulatorMessageId = new AtomicLong();
@@ -88,7 +88,7 @@ public class Simulator {
     }
 
     public long getTime() {
-        return time;
+        return currentTime;
     }
     
     public void addEventListener(ClientConnection client) {
@@ -101,9 +101,8 @@ public class Simulator {
 
     public void emulatorTimeStepped(ClientConnection client, long id, long timeStepOk) {
 //        log.debug("Got time stepped to " + time + " id:"  + id + " OK:" + timeStepOk + " waitingFor:" + waitingForTimeId + " Emu:" + emulatorsLeft);
-        if(id == waitingForTimeId) {
-            /* should also check for this specific clients "ack" */
-            if (client.setTime(time, id)) {
+        if(id == this.waitingForTimeId) {
+            if (client.setTime(stepTime, id)) {
                 emulatorsLeft--;
                 System.out.print("" + emulatorsLeft);
             } else {
@@ -112,11 +111,11 @@ public class Simulator {
             }
 
             if (getEmulatorsLeft() == 0) {
-                time = stepTime;
+                currentTime = stepTime;
 //                log.debug("No more emulators executing... - we are all at time: {}", time);
                 /* this should be handled in other thread? */
-                processAllEvents(time);
-                getTimeController().timeStepDone(waitingForTimeId);
+                processAllEvents(currentTime);
+                getTimeController().timeStepDone(this.timeControllerLastTimeId);
             }
         } else {
             log.debug("Wrong ID for emulatorTimeStepped:{} got {}", waitingForTimeId, id);
@@ -128,8 +127,8 @@ public class Simulator {
     }
 
     public void stepTime(long time, long id) {
-        waitingForTimeId = id; //simulatorMessageId.incrementAndGet();
-        lastTimeId = id;
+        waitingForTimeId = simulatorMessageId.incrementAndGet();
+        timeControllerLastTimeId = id;
         if (emulators == null) {
             emulatorsLeft = 0;
             return;
@@ -140,12 +139,12 @@ public class Simulator {
         /* inform all emulators about the time stepping */
         ClientConnection[] em = emulators;
         for (int i = 0; i < em.length; i++) {
-            em[i].emulateToTime(time, id);
+            em[i].emulateToTime(time, waitingForTimeId);
         }
     }
 
-    public long getLastTimeId() {
-        return lastTimeId;
+    public long getLastTimeIdFromTimeController() {
+        return timeControllerLastTimeId;
     }
 
     public void addRadioListener(RadioListener listener) {

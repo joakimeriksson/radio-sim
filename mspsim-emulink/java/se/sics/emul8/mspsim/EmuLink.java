@@ -196,7 +196,7 @@ public class EmuLink implements ClientHandler {
             }
 
         } else if (cmd != null) {
-            if (cmd.equals("time-set")) {
+            if (cmd.equals("time-step")) {
                 JsonObject params = json.get("parameters").asObject();
                 long newTime = params.getLong("time", 0);
 //                System.out.println("Accepting time elapsed." + (newTime - myTime));

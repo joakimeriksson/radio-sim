@@ -328,17 +328,16 @@ public class JSONClientConnection extends ClientConnection {
     /* tell emulators to run until a specific time */
     public void emulateToTime(long time, long timeId) {
         JsonObject json = new JsonObject();
-        json.add("command", "time-set");
+        json.add("command", "time-step");
         json.add("id", timeId);
         json.add("parameters", new JsonObject().add("time", time));
-        
+        // TODO add node info
         try {
             if(!send(json)) {
                 log.debug("Could not send step-time...");
             }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("failed to deliver time-set", e);
         }
     }
     
@@ -355,8 +354,7 @@ public class JSONClientConnection extends ClientConnection {
         try {
             send(new JsonObject().add("reply", "OK").add("id", timeId).add("reply-object", new JsonObject()));
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+            log.error("failed to deliver time step reply", e);
         }
     }
 
@@ -411,8 +409,7 @@ public class JSONClientConnection extends ClientConnection {
             try {
                 send(json);
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                log.error("failed to deliver event data", e);
             }
         }
     }
