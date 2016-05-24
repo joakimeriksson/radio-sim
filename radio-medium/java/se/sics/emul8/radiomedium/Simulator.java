@@ -271,7 +271,7 @@ public class Simulator {
         TransmissionEvent teStart = new TransmissionEvent(packetTime, this, packet, destination, rssi, true);
         TransmissionEvent teEnd;
         
-        teEnd = new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, true);
+        teEnd = new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
         eventQueue.addEvent(teStart);
         eventQueue.addEvent(teEnd);
     }
