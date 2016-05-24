@@ -42,32 +42,15 @@ public class SimulatorJSONHandler {
             reply.add("reply-object",new JsonObject().add("time", time));
         } else if (command.equals("time-set")) {
             if (simulator.getTimeController() == null) {
+                log.debug("{} set time controller", client.getName());
                 simulator.setTimeController(client);
             }
             if (simulator.getTimeController() == client){
                 /* risky stuff ... */
                 try {
                     time = json.get("parameters").asObject().get("time").asLong();
-                    ClientConnection[] emulators = simulator.getEmulators();
-                    if (emulators != null) {
-                        // Allocate new sequence number for the command
-                        simulator.stepTime(time, id);
-//                        json = new JsonObject();
-//                        json.add("command", "time-set");
-//                        json.add("id", simulator.getLastTimeId());
-//                        json.add("parameters", new JsonObject().add("time", time));
-//                        
-//                        for (ClientConnection emu : emulators) {
-//                            emu.send(json);
-//                        }
-                        /* handle the time elapsed here */
-                        /* -- send a set-time to all with nodes and set the emulatorsLeft to the number of connected emulator */
-                        /* -- collect all transmissions, and node/radio-changes in the event Q */
-                        /* -- for each of the OK replies update the connection's time to the current and decrease emulatorsLeft */
-                        /* -- when emulatorsLeft == 0 then process all events that are for this time period */
-                        /* set the id to expect for the response */
-                        reply = null; /* do not sent the reply now!!! */
-                    }
+                    simulator.stepTime(time, id);
+                    reply = null; /* do not sent the reply now!!! */
                 } catch(Exception e) {
                     setReplyError(reply, "command-error", "failed to set time:" + e.getMessage());
                 }

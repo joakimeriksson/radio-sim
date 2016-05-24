@@ -106,20 +106,23 @@ public class Simulator {
                 emulatorsLeft--;
                 System.out.print("" + emulatorsLeft);
             } else {
-              /* What to do here? */
+                /* What to do here? */
                 log.debug("ClientConnection did not accept time stepped call");
             }
 
             if (getEmulatorsLeft() == 0) {
-                currentTime = stepTime;
-//                log.debug("No more emulators executing... - we are all at time: {}", time);
-                /* this should be handled in other thread? */
-                processAllEvents(currentTime);
-                getTimeController().timeStepDone(this.timeControllerLastTimeId);
+                emulatorTimeStepDone();
             }
         } else {
             log.debug("Wrong ID for emulatorTimeStepped:{} got {}", waitingForTimeId, id);
         }
+    }
+
+    private void emulatorTimeStepDone() {
+        currentTime = stepTime;
+        /* this should be handled in other thread? */
+        processAllEvents(currentTime);
+        getTimeController().timeStepDone(this.timeControllerLastTimeId);
     }
 
     public int getEmulatorsLeft() {
@@ -127,17 +130,21 @@ public class Simulator {
     }
 
     public void stepTime(long time, long id) {
+        ClientConnection[] em = emulators;
+        if (emulatorsLeft > 0) {
+            log.warn("*** still waiting for {} clients when stepping time again to {}", emulatorsLeft, time);
+        }
         waitingForTimeId = simulatorMessageId.incrementAndGet();
         timeControllerLastTimeId = id;
+        stepTime = time;
         if (emulators == null) {
             emulatorsLeft = 0;
+            emulatorTimeStepDone();
             return;
         }
-        stepTime = time;
         emulatorsLeft = emulators.length;
 
         /* inform all emulators about the time stepping */
-        ClientConnection[] em = emulators;
         for (int i = 0; i < em.length; i++) {
             em[i].emulateToTime(time, waitingForTimeId);
         }
