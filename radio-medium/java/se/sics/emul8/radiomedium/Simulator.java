@@ -38,9 +38,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongUnaryOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.botbox.scheduler.EventQueue;
-
+import com.botbox.scheduler.TimeEvent;
 import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
@@ -53,6 +52,7 @@ public class Simulator {
     private static final Node[] NO_NODES = new Node[0];
 
     private EventQueue eventQueue = new EventQueue();
+    private Object eventLock = new Object();
     
     /* Responses, etc from emulators */
     public static final long TIME_STEP_OK = 0;
@@ -181,11 +181,20 @@ public class Simulator {
         }
     }
 
+    private TimeEvent nextEvent(long time) {
+        synchronized (eventLock) {
+            long nextTime = eventQueue.nextTime();
+            if (nextTime >= 0 && nextTime < time) {
+                return eventQueue.popFirst();
+            }
+            return null;
+        }
+    }
+
     /* process all the events in the event queue until time is time */
     private void processAllEvents(long time) {
-        long nextTime = 0;
-        while ((nextTime = eventQueue.nextTime()) != -1 && nextTime < time) {
-            eventQueue.popFirst().execute(time);
+        for(TimeEvent e = nextEvent(time); e != null; e = nextEvent(time)) {
+            e.execute(time);
         }
     }
 
@@ -286,8 +295,10 @@ public class Simulator {
         TransmissionEvent teEnd;
         
         teEnd = new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
-        eventQueue.addEvent(teStart);
-        eventQueue.addEvent(teEnd);
+        synchronized (eventLock) {
+            eventQueue.addEvent(teStart);
+            eventQueue.addEvent(teEnd);
+        }
     }
     
     /*  
