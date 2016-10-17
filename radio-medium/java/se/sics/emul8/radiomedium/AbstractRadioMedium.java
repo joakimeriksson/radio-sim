@@ -35,10 +35,15 @@ package se.sics.emul8.radiomedium;
 public abstract class AbstractRadioMedium implements RadioMedium {
 
     protected Simulator simulator;
+    protected double baseRSSI = -99.9;
 
     @Override
     public void setSimulator(Simulator sim) {
         this.simulator = sim;
     }
 
+    @Override
+    public double getBaseRSSI(Node node) {
+        return baseRSSI;
+    }
 }

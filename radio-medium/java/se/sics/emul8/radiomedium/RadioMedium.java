@@ -40,4 +40,6 @@ public interface RadioMedium {
 
     public void transmit(RadioPacket packet);
 
+    public double getBaseRSSI(Node node);
+
 }

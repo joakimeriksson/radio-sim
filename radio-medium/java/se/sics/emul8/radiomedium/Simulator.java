@@ -291,10 +291,10 @@ public class Simulator {
         if (packetTime < currentTime) {
             packetTime = currentTime;
         }
-        TransmissionEvent teStart = new TransmissionEvent(packetTime, this, packet, destination, rssi, true);
-        TransmissionEvent teEnd;
-        
-        teEnd = new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
+        TransmissionEvent teStart =
+                new TransmissionEvent(packetTime, this, packet, destination, rssi, true);
+        TransmissionEvent teEnd =
+                new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
         synchronized (eventLock) {
             eventQueue.addEvent(teStart);
             eventQueue.addEvent(teEnd);
@@ -312,7 +312,7 @@ public class Simulator {
             log.error("Node {} has no client connection", destination.getId());
             return;
         }
-        cc.sendPacket(packet, destination, this.getNextMessageId(), rssi);
+        cc.sendPacket(packet, destination, -1, rssi);
     }
 
     private static final LongUnaryOperator unsignedIncrementOperator = new LongUnaryOperator() {

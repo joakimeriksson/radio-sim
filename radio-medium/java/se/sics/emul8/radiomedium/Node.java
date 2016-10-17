@@ -46,8 +46,8 @@ public class Node {
 
     public Node(String id, Simulator sim) {
         this.id = id;
-        radio = new Transciever();
         this.sim = sim;
+        this.radio = new Transciever(this);
     }
 
     public String getId() {
@@ -75,5 +75,13 @@ public class Node {
         SimulationEvent event = new SimulationEvent(SimulationEvent.EventType.LOG_MESSAGE, sim.getTime(), this);
         event.setData("logMessage", logMsg);
         sim.deliverEvent(event);
+    }
+
+    public Simulator getSimulator() {
+        return this.sim;
+    }
+
+    public RadioMedium getRadioMedium() {
+        return this.sim.getRadioMedium();
     }
 }

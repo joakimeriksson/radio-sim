@@ -368,7 +368,9 @@ public class JSONClientConnection extends ClientConnection {
 
     public void sendPacket(RadioPacket packet, Node destination, long id, double rssi) {
         JsonObject json = packet.toJsonDestination(destination, rssi);
-        json.add("id", id);
+        if (id >= 0) {
+            json.add("id", id);
+        }
         try {
             send(json);
         } catch (IOException e) {
