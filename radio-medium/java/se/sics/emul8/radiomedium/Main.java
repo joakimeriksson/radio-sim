@@ -46,6 +46,10 @@ public class Main {
             System.setProperty("logback.configurationFile", "logback.xml");
         }
 
+        if (args.length > 0 && "-ws".equals(args[0])) {
+            web = true;
+        }
+
         Simulator simulator = new Simulator();
         RadioMedium radioMedium = new NullRadioMedium();
         PcapListener pcapListener = new PcapListener();
