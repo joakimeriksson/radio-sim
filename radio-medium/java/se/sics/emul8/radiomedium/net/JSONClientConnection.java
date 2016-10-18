@@ -423,4 +423,13 @@ public class JSONClientConnection extends ClientConnection {
             }
         }
     }
+
+    @Override
+    public void sendMessage(JsonObject json) {
+        try {
+            send(json);
+        } catch (IOException e) {
+            log.error("failed to send message: {}", json, e);
+        }
+    }
 }

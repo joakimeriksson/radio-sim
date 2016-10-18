@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.botbox.scheduler.EventQueue;
 import com.botbox.scheduler.TimeEvent;
+import com.eclipsesource.json.JsonObject;
 import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
@@ -75,6 +76,26 @@ public class Simulator {
     private ConcurrentHashMap<String, Node> nodeTable = new ConcurrentHashMap<String, Node>();
     private Node[] nodes = NO_NODES;
 
+    public Simulator() {
+        new Thread("ping") {
+            public void run() {
+                try {
+                    Thread.sleep(5000);
+                    ClientConnection[] em = emulators;
+                    if (em != null) {
+                        JsonObject json = new JsonObject();
+                        json.add("command", "ping");
+                        for(ClientConnection e : em) {
+                            log.info("Sending ping to {}", e.getName());
+                            e.sendMessage(json);
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
     public boolean isWaitingForTimeStep() {
         return waitingForTimeId >= 0;
     }

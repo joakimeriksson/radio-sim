@@ -32,6 +32,7 @@
  */
 package se.sics.emul8.radiomedium.net;
 import java.util.Hashtable;
+import com.eclipsesource.json.JsonObject;
 import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.RadioPacket;
 import se.sics.emul8.radiomedium.SimulationEvent;
@@ -75,4 +76,7 @@ public abstract class ClientConnection {
     
     /* An event that this is subscriber of */
     public abstract void sendEvent(SimulationEvent event);
+
+    public abstract void sendMessage(JsonObject json);
+
 }

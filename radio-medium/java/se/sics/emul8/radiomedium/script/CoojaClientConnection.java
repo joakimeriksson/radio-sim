@@ -1,6 +1,6 @@
 package se.sics.emul8.radiomedium.script;
 import java.util.ArrayList;
-
+import com.eclipsesource.json.JsonObject;
 import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.RadioPacket;
 import se.sics.emul8.radiomedium.SimulationEvent;
@@ -128,5 +128,8 @@ public class CoojaClientConnection extends ClientConnection {
 
     @Override
     public void emulateToTime(long time, long timeId) {
+    }
+
+    @Override public void sendMessage(JsonObject message) {
     }
 }
