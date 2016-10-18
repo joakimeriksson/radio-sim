@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
 
   <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -27,7 +28,9 @@
     </encoder>
   </appender>
 
-  <root level="${root-level:-DEBUG}">
+  <logger name="se.sics.emul8" level="DEBUG" />
+
+  <root level="${root-level:-WARN}">
     <appender-ref ref="STDOUT" />
     <appender-ref ref="FILE" />
   </root>
