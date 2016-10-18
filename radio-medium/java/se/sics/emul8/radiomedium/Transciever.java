@@ -2,11 +2,17 @@ package se.sics.emul8.radiomedium;
 
 public class Transciever {
 
+    public final static int LISTENING    = 0;
+    public final static int TRANSMITTING = 1;
+    public final static int RECEIVING    = 2;
+    public final static int DISABLED     = 3;
+
     private final Node node;
     private double txpower = 0.0;
     private int wirelessChannel = 26;
     private boolean isEnabled = true;
     private RadioPacket receivingPacket;
+    private RadioPacket sendingPacket;
     private double receivingRSSI;
     private double rxProbability = 1.0;
     private double txProbability = 1.0;
@@ -58,7 +64,21 @@ public class Transciever {
         return this.receivingPacket != null;
     }
 
+    public int getReceivingState() {
+        if (!isEnabled) {
+            return DISABLED;
+        }
+        if (this.receivingPacket != null) {
+            return RECEIVING;
+        }
+        if (this.sendingPacket != null) {
+            return TRANSMITTING;
+        }
+        return LISTENING;
+    }
+
     public void setReceiving(RadioPacket packet, double rssi) {
+        this.clearSending();
         this.receivingPacket = packet;
         this.receivingRSSI = rssi;
     }
@@ -81,5 +101,14 @@ public class Transciever {
 
     public void setTxProbability(double probability) {
         this.txProbability = probability;
+    }
+
+    public void setSending(RadioPacket packet) {
+        this.clearReceiving();
+        this.sendingPacket = packet;
+    }
+
+    public void clearSending() {
+        this.sendingPacket = null;
     }
 }

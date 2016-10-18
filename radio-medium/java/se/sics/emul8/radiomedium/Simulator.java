@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.botbox.scheduler.EventQueue;
 import com.botbox.scheduler.TimeEvent;
+import se.sics.emul8.radiomedium.events.ReceptionEvent;
 import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
@@ -99,8 +100,12 @@ public class Simulator {
       return simulatorMessageId.updateAndGet(unsignedIncrementOperator);
     }
 
-    public void addEventListener(ClientConnection client) {
+    public synchronized void addEventListener(ClientConnection client) {
         this.eventListeners = ArrayUtils.add(ClientConnection.class, this.eventListeners, client);
+    }
+
+    public synchronized void removeEventListener(ClientConnection client) {
+        this.eventListeners = ArrayUtils.remove(this.eventListeners, client);
     }
 
     public ClientConnection[] getEmulators() {
@@ -286,21 +291,36 @@ public class Simulator {
         }
     }
  
-    public void generateTransmissionEvents(RadioPacket packet, Node destination, double rssi) {
-        long packetTime = packet.getTime();
+    public void generateReceptionEvents(RadioPacket packet, Node destination, double rssi) {
+        long packetTime = packet.getStartTime();
         if (packetTime < currentTime) {
             packetTime = currentTime;
         }
-        TransmissionEvent teStart =
-                new TransmissionEvent(packetTime, this, packet, destination, rssi, true);
-        TransmissionEvent teEnd =
-                new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
+        ReceptionEvent teStart =
+                new ReceptionEvent(packetTime, this, packet, destination, rssi, true);
+        ReceptionEvent teEnd =
+                new ReceptionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
         synchronized (eventLock) {
             eventQueue.addEvent(teStart);
             eventQueue.addEvent(teEnd);
         }
     }
-    
+
+    public void generateTransmissionEvents(RadioPacket packet) {
+        long packetTime = packet.getStartTime();
+        if (packetTime < currentTime) {
+            packetTime = currentTime;
+        }
+        TransmissionEvent teStart =
+                new TransmissionEvent(packetTime, this, packet, true);
+        TransmissionEvent teEnd =
+                new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, false);
+        synchronized (eventLock) {
+            eventQueue.addEvent(teStart);
+            eventQueue.addEvent(teEnd);
+        }
+    }
+
     /*  
      * Deliver a radio packet to a specific destination node.
      * 
@@ -322,4 +342,5 @@ public class Simulator {
         }
 
     };
+
 }

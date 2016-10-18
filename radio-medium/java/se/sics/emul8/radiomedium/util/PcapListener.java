@@ -48,7 +48,7 @@ public class PcapListener implements RadioListener{
     @Override
     public void packetTransmission(RadioPacket packet) {
         try {
-            exporter.exportPacketData(packet.getTime(), packet.getPacketDataAsBytes());
+            exporter.exportPacketData(packet.getStartTime(), packet.getPacketDataAsBytes());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

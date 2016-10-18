@@ -39,22 +39,29 @@ public class SimulatorJSONHandler {
 //          No command specified
             reply = createReplyError(id, "command-error", "no command specified");
         } else if (command.equals("time-get")) {
-            reply = createReplyObject(id).set("reply-object",new JsonObject().add("time", time));
-        } else if (command.equals("time-set")) {
-            if (simulator.getTimeController() == null) {
-                log.debug("{} set time controller", client.getName());
-                simulator.setTimeController(client);
+            if (id >= 0) {
+                reply = createReplyObject(id).set("reply-object",new JsonObject().add("time", time));
             }
-            if (simulator.getTimeController() == client){
-                /* risky stuff ... */
-                try {
-                    time = json.get("parameters").asObject().get("time").asLong();
-                    simulator.stepTime(time, id);
-                } catch(Exception e) {
-                    reply = createReplyError(id, "command-error", "failed to set time:" + e.getMessage());
-                }
+        } else if (command.equals("time-set")) {
+            if (id < 0) {
+                // time-set must include a reply id
+                reply = createReplyError(id, "command-error", "time-set must include reply id");
             } else {
-                reply = createReplyError(id, "command-error", "only one time controller allowed");
+                if (simulator.getTimeController() == null) {
+                    log.debug("{} set time controller", client.getName());
+                    simulator.setTimeController(client);
+                }
+                if (simulator.getTimeController() == client){
+                    /* risky stuff ... */
+                    try {
+                        time = json.get("parameters").asObject().get("time").asLong();
+                        simulator.stepTime(time, id);
+                    } catch(Exception e) {
+                        reply = createReplyError(id, "command-error", "failed to set time:" + e.getMessage());
+                    }
+                } else {
+                    reply = createReplyError(id, "command-error", "only one time controller allowed");
+                }
             }
         } else if (command.equals("transmit")) {
             String nodeId = json.get("node-id").toString();
@@ -137,15 +144,15 @@ public class SimulatorJSONHandler {
                 JsonObject nodeInfo = new JsonObject();
                 nodeInfo.add("node_id", nodeId);
                 nodeInfo.add("rssi", node.getRadio().getRSSI());
-                nodeInfo.add("receiving", node.getRadio().isReceiving() ? 1 : 0);
+                nodeInfo.add("receiving", node.getRadio().getReceivingState());
                 nodeInfo.add("wireless-channel", node.getRadio().getWirelessChannel());
                 reply = createReplyObject(id).set("reply-object", new JsonObject().add("node-info", nodeInfo));
             }
 
         } else if (command.equals("link-quality")) {
             JsonObject link = json.get("link").asObject();
-            String sourceId = link.get("source").toString();
-            String destId = link.get("destination").toString();
+            String sourceId = link.get("src").toString();
+            String destId = link.get("dst").toString();
             JsonValue value = json.get("wireless-channel");
             int channel = -1;
             if (value != null && value.isNumber()) {
@@ -175,6 +182,9 @@ public class SimulatorJSONHandler {
         } else if (command.equals("subscribe-event")) {
             log.debug("Adding client connection as event listener");
             simulator.addEventListener(client);
+        } else if (command.equals("unsubscribe-event")) {
+            log.debug("Removed client connection as event listener");
+            simulator.removeEventListener(client);
         } else {
             /* What did we get here ??? */
             reply = createReplyError(id, "command-error", "unsupported command: " + command);

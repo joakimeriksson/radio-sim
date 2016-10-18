@@ -42,7 +42,6 @@ public class RadioPacket {
     private double txpower;
     private int channel;
     private String packetData;
-    private boolean endTime;
 
     public RadioPacket(Node node, long time, String packetData) {
         this.node = node;
@@ -56,17 +55,18 @@ public class RadioPacket {
         return this.node;
     }
 
-    public long getTime() {
-        if (endTime) {
-            return this.time + getPacketAirTime();
-        }
+    public long getStartTime() {
         return this.time;
+    }
+
+    public long getEndTime() {
+        return this.time + getPacketAirTime();
     }
     
     /* This is assumed to be 802.15.4 250 kbps for now */
     public long getPacketAirTime() {
         if (packetData != null) {
-            System.out.println("Packet size:" + packetData.length() + " usec:" + 32 * packetData.length());
+            //System.out.println("Packet size:" + packetData.length() + " usec:" + 32 * packetData.length());
             /* microseconds delay for the packet - 250 000 bit / s = 31 000 byte / s = 31 byte / ms =>
              * each byte takes 1000 us / 31 byte = 32 us per byte */
             return packetData.length() * 32;
@@ -74,11 +74,6 @@ public class RadioPacket {
         return 0;
     }
 
-    public void setEndTime() {
-        endTime = true;
-    }
-
-    
     public double getTransmitPower() {
         return this.txpower;
     }
@@ -107,7 +102,7 @@ public class RadioPacket {
         JsonObject json = new JsonObject();
         json.add("command", "receive");
         json.add("node-id", destination.getId());
-        json.add("time", getTime());
+        json.add("time", getStartTime());
         json.add("rf-power", rssi);
         json.add("wireless-channel", this.channel);
         json.add("packet-data", this.packetData);

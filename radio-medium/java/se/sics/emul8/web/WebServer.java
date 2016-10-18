@@ -101,7 +101,7 @@ public class WebServer extends AbstractHandler {
             @Override
             public void packetTransmission(RadioPacket packet) {
                 byte[] data = packet.getPacketDataAsBytes();
-                CapturedPacket capPacket = new CapturedPacket(packet.getTime(), Arrays.copyOfRange(data, 1, data.length));
+                CapturedPacket capPacket = new CapturedPacket(packet.getStartTime(), Arrays.copyOfRange(data, 1, data.length));
                 System.out.println("Packet received and sent on to jshark len:" + (packet.getPacketDataAsBytes().length - 1));
                 try {
                     jshark.packetData(capPacket);                    
