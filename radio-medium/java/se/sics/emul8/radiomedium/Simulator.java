@@ -80,18 +80,23 @@ public class Simulator {
         new Thread("ping") {
             public void run() {
                 try {
-                    Thread.sleep(5000);
-                    ClientConnection[] em = emulators;
-                    if (em != null) {
-                        JsonObject json = new JsonObject();
-                        json.add("command", "ping");
-                        for(ClientConnection e : em) {
-                            log.info("Sending ping to {}", e.getName());
-                            e.sendMessage(json);
+                    while(true) {
+                        Thread.sleep(5000);
+                        ClientConnection[] em = emulators;
+                        if (em != null) {
+                            JsonObject json = new JsonObject();
+                            json.add("command", "ping");
+                            log.info("Sending ping to {} clients", em.length);
+                            for(ClientConnection e : em) {
+                                log.info("Sending ping to {}", e.getName());
+                                e.sendMessage(json);
+                            }
+                        } else {
+                            log.debug("no clients to ping");
                         }
                     }
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    log.error("Ping thread died", e);
                 }
             }
         }.start();
