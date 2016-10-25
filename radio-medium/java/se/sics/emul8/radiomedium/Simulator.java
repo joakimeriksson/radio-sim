@@ -121,7 +121,7 @@ public class Simulator {
                 emulatorsLeft--;
             } else {
                 /* What to do here? */
-                log.debug("ClientConnection did not accept time stepped call");
+                log.warn("ClientConnection did not accept time stepped call");
             }
 
             if (getEmulatorsLeft() == 0) {

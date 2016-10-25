@@ -114,9 +114,15 @@ public class TestEmulator implements ClientHandler {
                 }
                 ((JSONClientConnection)clientConnection).sendLogMsg(nodeId, "Accepted time elapse to " + myTime);
             } else if (cmd.equals("transmit")) {
-                String destId = json.getString("destination-node-id", null);
-                System.out.println("Transmission for node: " + destId);
-                if (("" + nodeId).equals(destId)) {
+                String sourceId = json.getString("node-id", null);
+                System.out.println("Transmission from node: " + sourceId);
+                if (("" + nodeId).equals(sourceId)) {
+                    ((JSONClientConnection)clientConnection).sendLogMsg(nodeId, "Got message from me!");
+                }
+            } else if (cmd.equals("receive")) {
+                String destinationId = json.getString("node-id", null);
+                System.out.println("Transmission for node: " + destinationId);
+                if (("" + nodeId).equals(destinationId)) {
                     ((JSONClientConnection)clientConnection).sendLogMsg(nodeId, "Got message to me!");
                 }
             }

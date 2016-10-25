@@ -110,4 +110,11 @@ public class RadioPacket {
         return json;
     }
 
+    @Override
+    public String toString() {
+        return "RadioPacket[" + this.getStartTime() + "," + this.getEndTime()
+        + "," + node.getId() + "," + (this.packetData == null ? 0 : this.packetData.length() / 2)
+        + "]";
+    }
+
 }

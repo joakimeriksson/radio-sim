@@ -24,4 +24,10 @@ public class TransmissionEvent extends TimeEvent {
             t.clearSending();
         }
     }
+
+    @Override
+    public String toString() {
+        return "TransmissionEvent[" + this.time + "," + (this.isStart ? "start" : "end")
+                + "," + packet + "]";
+    }
 }

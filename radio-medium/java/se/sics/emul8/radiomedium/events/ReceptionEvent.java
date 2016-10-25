@@ -29,13 +29,17 @@ public class ReceptionEvent extends TimeEvent {
     public void execute(long currentTime) {
         Transciever t = this.destination.getRadio();
         if(!isStart) {
-            /* Only deliver on the end flank */
-            System.out.println("Transmission event - delivering second transmission." + currentTime);
             t.clearReceiving();
+            /* Only deliver on the end flank */
             simulator.deliverRadioPacket(packet, destination, rssi);
         } else {
-            System.out.println("Transmission event - not delivering first packet transmission - only second." + currentTime);
             t.setReceiving(packet, rssi);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "ReceptionEvent[" + this.time + "," + (this.isStart ? "start" : "end")
+                + "," + destination.getId() + "," + packet + "]";
     }
 }
