@@ -192,7 +192,7 @@ public class SimulatorJSONHandler {
 
         if (reply == null && id >= 0) {
             // A reply is expected
-            reply = createReplyObject(id).set("reply-object", new JsonObject());
+            reply = createReplyObject(id);
         }
 
         if (reply != null) {

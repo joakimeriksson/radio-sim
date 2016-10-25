@@ -372,7 +372,7 @@ public class JSONClientConnection extends ClientConnection {
     /* called when the time in the simulator has stepped to the desired time */
     public void timeStepDone(long timeId) {
         try {
-            send(new JsonObject().add("reply", "OK").add("id", timeId).add("reply-object", new JsonObject()));
+            send(new JsonObject().add("reply", "OK").add("id", timeId));
         } catch (IOException e) {
             log.error("failed to deliver time step reply", e);
         }
