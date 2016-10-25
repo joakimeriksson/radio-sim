@@ -71,7 +71,7 @@ public class Simulator {
     private long timeControllerLastTimeId = -1;
     private long waitingForTimeId = -1;
 
-    private AtomicLong simulatorMessageId = new AtomicLong();
+    private AtomicLong simulatorMessageId = new AtomicLong(1000);
 
     private ConcurrentHashMap<String, Node> nodeTable = new ConcurrentHashMap<String, Node>();
     private Node[] nodes = NO_NODES;
@@ -138,6 +138,7 @@ public class Simulator {
         this.waitingForTimeId = -1;
 
         /* this should be handled in other thread? */
+        log.debug("timeStep finished - processing all events");
         processAllEvents(currentTime);
 
         // Notify the time controller that we now have stepped to the specified time.
