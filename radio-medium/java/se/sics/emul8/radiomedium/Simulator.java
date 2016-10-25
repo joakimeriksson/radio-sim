@@ -157,6 +157,10 @@ public class Simulator {
         waitingForTimeId = getNextMessageId();
         timeControllerLastTimeId = id;
         stepTime = time;
+
+        // Process all events that should happen during the time step
+        processAllEvents(time);
+
         if (emulators == null) {
             emulatorsLeft = 0;
             emulatorTimeStepDone();
