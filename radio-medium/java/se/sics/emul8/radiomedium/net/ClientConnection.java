@@ -62,7 +62,7 @@ public abstract class ClientConnection {
     public abstract void close();
     
     /* Called when it is time to step time for all emulators. */
-    public abstract void emulateToTime(long time, long timeId);
+    public abstract void emulateToTime(Node[] nodes, long time, long timeId);
 
     /* Called when it is time set the time to the higher value (needed?) */
     public abstract boolean setTime(long time, long timeId);

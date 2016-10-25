@@ -165,7 +165,7 @@ public class Simulator {
 
         /* inform all emulators about the time stepping */
         for (int i = 0; i < em.length; i++) {
-            em[i].emulateToTime(time, waitingForTimeId);
+            em[i].emulateToTime(getNodes(), time, waitingForTimeId);
         }
     }
 

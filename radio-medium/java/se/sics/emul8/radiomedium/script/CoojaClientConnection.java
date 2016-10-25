@@ -127,6 +127,6 @@ public class CoojaClientConnection extends ClientConnection {
     }
 
     @Override
-    public void emulateToTime(long time, long timeId) {
+    public void emulateToTime(Node[] nodes, long time, long timeId) {
     }
 }

@@ -331,11 +331,23 @@ public class JSONClientConnection extends ClientConnection {
     }
 
     /* tell emulators to run until a specific time */
-    public void emulateToTime(long time, long timeId) {
+    @Override
+    public void emulateToTime(Node[] nodes, long time, long timeId) {
         JsonObject json = new JsonObject();
         JsonArray nodeInfos = new JsonArray();
 
-        // TODO add relevant node info
+        // Add node-info
+        for (Node node : nodes) {
+            if (node.getClientConnection() != this) {
+                continue;
+            }
+            JsonObject nodeInfo = new JsonObject();
+            nodeInfo.add("node_id", node.getId());
+            nodeInfo.add("rssi", node.getRadio().getRSSI());
+            nodeInfo.add("receiving", node.getRadio().getReceivingState());
+            nodeInfo.add("wireless-channel", node.getRadio().getWirelessChannel());
+            nodeInfos.add(nodeInfo);
+        }
 
         json.add("command", "time-step");
         json.add("id", timeId);
