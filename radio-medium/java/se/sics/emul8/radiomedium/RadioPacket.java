@@ -102,7 +102,8 @@ public class RadioPacket {
         JsonObject json = new JsonObject();
         json.add("command", "receive");
         json.add("node-id", destination.getId());
-        json.add("time", getStartTime());
+        json.add("time-start", getStartTime());
+        json.add("time-end", getEndTime());
         json.add("rf-power", rssi);
         json.add("wireless-channel", this.channel);
         json.add("packet-data", this.packetData);
