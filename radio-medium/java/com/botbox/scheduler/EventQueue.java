@@ -141,7 +141,7 @@ public class EventQueue {
         }
         return -1;
     }
-    
+
     private TimeEvent getFirst(boolean remove) {
         if (numBottom > 0) {
             TimeEvent retVal = firstBottom;
@@ -155,14 +155,16 @@ public class EventQueue {
             return retVal;
         } else if (numRung > 0) {
             moveBucket();
-            if (numBottom > 0)
-                return popFirst();
+            if (numBottom > 0) {
+                return getFirst(remove);
+            }
         } else if (numTop > 0) {
             // Set first runge!
             moveTop();
             moveBucket();
-            if (numBottom > 0)
-                return popFirst();
+            if (numBottom > 0) {
+                return getFirst(remove);
+            }
         }
 
         return null;
