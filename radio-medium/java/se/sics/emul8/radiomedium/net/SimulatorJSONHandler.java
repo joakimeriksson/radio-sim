@@ -34,6 +34,7 @@ public class SimulatorJSONHandler {
 
         long id = json.getLong("id", -1);
         JsonObject reply = null;
+        boolean noreply = false;
         String command = json.getString("command", null);
         if (command == null) {
 //          No command specified
@@ -56,6 +57,7 @@ public class SimulatorJSONHandler {
                     try {
                         time = json.get("parameters").asObject().get("time").asLong();
                         simulator.stepTime(time, id);
+                        noreply = true;
                     } catch(Exception e) {
                         reply = createReplyError(id, "command-error", "failed to set time:" + e.getMessage());
                     }
@@ -190,7 +192,7 @@ public class SimulatorJSONHandler {
             reply = createReplyError(id, "command-error", "unsupported command: " + command);
         }
 
-        if (reply == null && id >= 0) {
+        if (reply == null && id >= 0 && !noreply) {
             // A reply is expected
             reply = createReplyObject(id);
         }
