@@ -342,7 +342,7 @@ public class JSONClientConnection extends ClientConnection {
                 continue;
             }
             JsonObject nodeInfo = new JsonObject();
-            nodeInfo.add("node_id", node.getId());
+            nodeInfo.add("node-id", node.getId());
             nodeInfo.add("rssi", node.getRadio().getRSSI());
             nodeInfo.add("receiving", node.getRadio().getReceivingState());
             nodeInfo.add("wireless-channel", node.getRadio().getWirelessChannel());

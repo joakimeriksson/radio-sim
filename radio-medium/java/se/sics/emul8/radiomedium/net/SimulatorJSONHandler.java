@@ -144,7 +144,7 @@ public class SimulatorJSONHandler {
             if (id >= 0) {
                 // Add node-info
                 JsonObject nodeInfo = new JsonObject();
-                nodeInfo.add("node_id", nodeId);
+                nodeInfo.add("node-id", nodeId);
                 nodeInfo.add("rssi", node.getRadio().getRSSI());
                 nodeInfo.add("receiving", node.getRadio().getReceivingState());
                 nodeInfo.add("wireless-channel", node.getRadio().getWirelessChannel());
