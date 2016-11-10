@@ -21,6 +21,7 @@ public class CoojaClientConnection extends ClientConnection {
     private long timeout = 60 * 60 * 1000 * 1000; /* 1 hours default timeout */
     
     public CoojaClientConnection(CoojaScriptEngine engine, Simulator sim) {
+        super("cooja");
         coojaScriptEngine = engine;
         this.sim = sim;
     }
@@ -92,6 +93,11 @@ public class CoojaClientConnection extends ClientConnection {
     
     @Override
     public void close() {
+    }
+
+    @Override
+    public long getTime() {
+        return time;
     }
 
     @Override

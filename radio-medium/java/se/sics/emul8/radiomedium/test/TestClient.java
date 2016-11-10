@@ -66,11 +66,11 @@ public class TestClient implements ClientHandler {
     private void serveForever() {
         long time = 0;
         while (true) {
-            JsonObject timeReq = new JsonObject();
-            timeReq.add("command", "time-get");
+//            JsonObject timeReq = new JsonObject();
+//            timeReq.add("command", "time-get");
             try {
                 Thread.sleep(1000);
-                clientConnection.send(timeReq);
+//                clientConnection.send(timeReq);
                 if (isWaitingForTimeSet) {
                     log.debug("*** still waiting for time set reply");
                 } else {

@@ -63,24 +63,23 @@ public class JSONClientConnection extends ClientConnection {
     private Socket socket;
     private OutputStream out;
     private BufferedInputStream in;
-    private String name;
-    private boolean isConnected;
     private boolean isWaitingForProtocolHeader;
     private boolean hasStarted;
     private long emulationTime; /* if this is an emulator this will be updated to reflect how far this emulator reached */
 
     public JSONClientConnection(ClientHandler clientHandler, Socket socket) throws IOException {
+        super("[" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + ']');
         this.clientHandler = clientHandler;
         this.socket = socket;
-        this.name = "[" + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + ']';
 
         this.out = socket.getOutputStream();
         this.in = new BufferedInputStream(socket.getInputStream());
-        this.isConnected = true;
-        log.debug("{} client connected", this.name);
+        this.setConnected(true);
+        log.debug("{} client connected", this.getName());
     }
 
     public JSONClientConnection(ClientHandler clientHandler, String host, int port) throws IOException {
+        super("");
         InetAddress addr = InetAddress.getByName(host);
         InetSocketAddress sockaddr = new InetSocketAddress(addr, port);
 
@@ -90,7 +89,7 @@ public class JSONClientConnection extends ClientConnection {
         this.socket.connect(sockaddr, TIMEOUT);
 
         this.clientHandler = clientHandler;
-        this.name = "[" + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + ']';
+        setName("[" + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort() + ']');
 
         this.out = this.socket.getOutputStream();
         this.in = new BufferedInputStream(this.socket.getInputStream());
@@ -98,16 +97,8 @@ public class JSONClientConnection extends ClientConnection {
         // Connecting to server that should respond with a protocol header
         this.isWaitingForProtocolHeader = true;
 
-        this.isConnected = true;
-        log.debug("{} client connected", this.name);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean isConnected() {
-        return isConnected;
+        setConnected(true);
+        log.debug("{} client connected", this.getName());
     }
 
     public void sendRawData(byte[] data) throws IOException {
@@ -129,14 +120,14 @@ public class JSONClientConnection extends ClientConnection {
                 try {
                     processInput(in);
                 } catch (Exception e) {
-                    if (isConnected) {
+                    if (isConnected()) {
                         log.error("{} connection closed", getName(), e);
                     }
                 } finally {
                     close();
                 }
             }
-        }, name);
+        }, this.getName());
         t.start();
     }
 
@@ -296,8 +287,8 @@ public class JSONClientConnection extends ClientConnection {
     }
 
     public void close() {
-        boolean isDisconnecting = isConnected;
-        isConnected = false;
+        boolean isDisconnecting = isConnected();
+        setConnected(false);
         try {
             if (isDisconnecting) {
                 log.debug("{} disconnecting", getName());
@@ -360,7 +351,13 @@ public class JSONClientConnection extends ClientConnection {
             log.error("failed to deliver time-step", e);
         }
     }
-    
+
+    @Override
+    public long getTime() {
+        return emulationTime;
+    }
+
+    @Override
     public boolean setTime(long time, long timeId) {
         if (emulationTime <= time) {
             emulationTime = time;

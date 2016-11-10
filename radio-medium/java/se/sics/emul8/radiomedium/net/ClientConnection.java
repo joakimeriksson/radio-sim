@@ -41,7 +41,11 @@ public abstract class ClientConnection {
     private Hashtable<String, Object> clientProperties = new Hashtable<String, Object>();
 
     private boolean isConnected = false;
-    private String name = "";
+    private String name;
+
+    protected ClientConnection(String name) {
+        this.name = name;
+    }
 
     public void setProperty(String name, Object value) {
         clientProperties.put(name, value);
@@ -55,14 +59,24 @@ public abstract class ClientConnection {
         return name;
     }
 
+    protected void setName(String name) {
+        this.name = name;
+    }
+
     public boolean isConnected() {
         return isConnected;
+    }
+
+    protected void setConnected(boolean isConnected) {
+        this.isConnected = isConnected;
     }
 
     public abstract void close();
     
     /* Called when it is time to step time for all emulators. */
     public abstract void emulateToTime(Node[] nodes, long time, long timeId);
+
+    public abstract long getTime();
 
     /* Called when it is time set the time to the higher value (needed?) */
     public abstract boolean setTime(long time, long timeId);
