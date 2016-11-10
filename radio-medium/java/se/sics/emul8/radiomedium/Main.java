@@ -38,22 +38,35 @@ import se.sics.emul8.web.WebServer;
 
 public class Main {
 
+    private static void usage(int exit) {
+        System.out.println("Usage: radiomedium [-ws] [-pcap]");
+        System.exit(exit);
+    }
 
     public static void main(String[] args) throws InterruptedException {
+        PcapListener pcapListener = null;
         // web server on - or - off
         boolean web = false;
         if (System.getProperty("logback.configurationFile") == null) {
             System.setProperty("logback.configurationFile", "logback.xml");
         }
 
-        if (args.length > 0 && "-ws".equals(args[0])) {
-            web = true;
+        for (int i = 0; i < args.length; i++) {
+            if ("-ws".equals(args[i])) {
+                web = true;
+            } else if ("-pcap".equals(args[i])) {
+                pcapListener = new PcapListener();
+            } else {
+                System.err.println("Unhandled argument: " + args[i]);
+                usage(1);
+            }
         }
 
         Simulator simulator = new Simulator();
         RadioMedium radioMedium = new NullRadioMedium();
-        PcapListener pcapListener = new PcapListener();
-        simulator.addRadioListener(pcapListener);
+        if (pcapListener != null) {
+            simulator.addRadioListener(pcapListener);
+        }
         radioMedium.setSimulator(simulator);
         simulator.setRadioMedium(radioMedium);
         Server server = new Server(Simulator.DEFAULT_PORT);
@@ -70,7 +83,7 @@ public class Main {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
-        }        
+        }
         for (;;) {
             Thread.sleep(1000);
         }
