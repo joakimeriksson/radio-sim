@@ -156,10 +156,10 @@ public class Simulator {
         }
         waitingForTimeId = getNextMessageId();
         timeControllerLastTimeId = id;
+        if (time > stepTime) {
+            log.warn("*** trying to step time backwards from {} to {}", stepTime, time);
+        }
         stepTime = time;
-
-        // Process all events that should happen during the time step
-        processAllEvents(time);
 
         if (emulators == null) {
             emulatorsLeft = 0;
@@ -297,30 +297,30 @@ public class Simulator {
     }
  
     public void generateReceptionEvents(RadioPacket packet, Node destination, double rssi) {
-        long packetTime = packet.getStartTime();
-        if (packetTime < currentTime) {
-            packetTime = currentTime;
-        }
-        ReceptionEvent teStart =
-                new ReceptionEvent(packetTime, this, packet, destination, rssi, true);
-        ReceptionEvent teEnd =
-                new ReceptionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
         synchronized (eventLock) {
+            long packetTime = packet.getStartTime();
+            if (packetTime < currentTime) {
+                packetTime = currentTime;
+            }
+            ReceptionEvent teStart =
+                    new ReceptionEvent(packetTime, this, packet, destination, rssi, true);
+            ReceptionEvent teEnd =
+                    new ReceptionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
             eventQueue.addEvent(teStart);
             eventQueue.addEvent(teEnd);
         }
     }
 
     public void generateTransmissionEvents(RadioPacket packet) {
-        long packetTime = packet.getStartTime();
-        if (packetTime < currentTime) {
-            packetTime = currentTime;
-        }
-        TransmissionEvent teStart =
-                new TransmissionEvent(packetTime, this, packet, true);
-        TransmissionEvent teEnd =
-                new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, false);
         synchronized (eventLock) {
+            long packetTime = packet.getStartTime();
+            if (packetTime < currentTime) {
+                packetTime = currentTime;
+            }
+            TransmissionEvent teStart =
+                    new TransmissionEvent(packetTime, this, packet, true);
+            TransmissionEvent teEnd =
+                    new TransmissionEvent(packetTime + packet.getPacketAirTime(), this, packet, false);
             eventQueue.addEvent(teStart);
             eventQueue.addEvent(teEnd);
         }

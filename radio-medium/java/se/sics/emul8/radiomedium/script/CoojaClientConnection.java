@@ -60,10 +60,10 @@ public class CoojaClientConnection extends ClientConnection {
                         try {
                             CoojaClientConnection.this.wait();
                             handleAllEvents();
-                            time += 1000000; /* one millisecond */
-                            Thread.sleep(100);
+                            time += 1000; /* one millisecond */
+//                            Thread.sleep(1);
                         } catch (InterruptedException e) {
-                            // TODO Auto-generated catch block
+                            Thread.currentThread().interrupt();
                             e.printStackTrace();
                             stop = true;
                         }
