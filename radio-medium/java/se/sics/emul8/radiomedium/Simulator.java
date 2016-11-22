@@ -156,7 +156,7 @@ public class Simulator {
         }
         waitingForTimeId = getNextMessageId();
         timeControllerLastTimeId = id;
-        if (time > stepTime) {
+        if (stepTime > time) {
             log.warn("*** trying to step time backwards from {} to {}", stepTime, time);
         }
         stepTime = time;
