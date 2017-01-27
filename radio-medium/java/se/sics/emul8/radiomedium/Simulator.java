@@ -33,6 +33,7 @@
  *
  */
 package se.sics.emul8.radiomedium;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.LongUnaryOperator;
@@ -59,6 +60,7 @@ public class Simulator {
     public static final long TIME_STEP_OK = 0;
 
     private RadioMedium radioMedium;
+    private final Random simulationRandom;
 
     private RadioListener[] radioListeners = null;
     
@@ -75,6 +77,14 @@ public class Simulator {
 
     private ConcurrentHashMap<String, Node> nodeTable = new ConcurrentHashMap<String, Node>();
     private Node[] nodes = NO_NODES;
+
+    public Simulator() {
+        this.simulationRandom = new Random();
+    }
+
+    public Random getRandom() {
+        return this.simulationRandom;
+    }
 
     public boolean isWaitingForTimeStep() {
         return waitingForTimeId >= 0;
