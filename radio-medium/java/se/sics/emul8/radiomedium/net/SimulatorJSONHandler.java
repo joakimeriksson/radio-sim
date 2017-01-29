@@ -181,11 +181,11 @@ public class SimulatorJSONHandler {
                     log.debug("CONFIG: propagation-option: {}", value);
                     if ("n2n-link".equals(value)) {
                         JsonValue matrix = params.get("matrix-data");
-                        if (matrix == null || !matrix.isArray()) {
+                        JsonArray cols;
+                        if (matrix == null || !matrix.isArray() || (cols = matrix.asArray()).size() <= 0) {
                             log.error("No N2N matrix specified for radio medium!");
                             reply = createReplyError(id, "command-error", "no matrix specified");
                         } else {
-                            JsonArray cols = matrix.asArray();
                             double[][] m = new double[cols.size()][];
                             for(int i = 0, n = cols.size(); i < n; i++) {
                                 JsonArray r = cols.get(i).asArray();
