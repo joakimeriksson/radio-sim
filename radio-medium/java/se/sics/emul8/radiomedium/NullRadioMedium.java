@@ -41,7 +41,6 @@ public class NullRadioMedium extends AbstractRadioMedium {
 
     @Override
     public String getName() {
-        // TODO Auto-generated method stub
         return "Null radio medium - just forwards incoming packets to all other nodes";
     }
 

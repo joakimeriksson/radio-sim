@@ -39,6 +39,7 @@ import se.sics.emul8.radiomedium.net.ClientConnection;
 public class Node {
 
     private final String id;
+    private final int intID;
     private final Position pos = new Position();
     private Transciever radio;
     private Simulator sim;
@@ -48,10 +49,21 @@ public class Node {
         this.id = id;
         this.sim = sim;
         this.radio = new Transciever(this);
+        int numID;
+        try {
+            numID = Integer.parseInt(id);
+        } catch (Exception e) {
+            numID = -1;
+        }
+        this.intID = numID;
     }
 
     public String getId() {
         return this.id;
+    }
+
+    public int getIdAsInteger() {
+        return intID;
     }
 
     public Position getPosition() {

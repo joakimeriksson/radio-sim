@@ -25,16 +25,16 @@ public class Transciever {
         return node;
     }
 
-    public double getTransmitPower() {
-        return this.txpower;
-    }
-
     public boolean isEnabled() {
         return this.isEnabled;
     }
 
     public void setEnabled(boolean isEnabled) {
         this.isEnabled  = isEnabled;
+    }
+
+    public double getTransmitPower() {
+        return this.txpower;
     }
 
     public void setTransmitPower(double txpower) {

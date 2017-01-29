@@ -8,11 +8,12 @@ import org.slf4j.LoggerFactory;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-
+import se.sics.emul8.radiomedium.N2NRadioMedium;
 import se.sics.emul8.radiomedium.Node;
 import se.sics.emul8.radiomedium.RadioMedium;
 import se.sics.emul8.radiomedium.RadioPacket;
 import se.sics.emul8.radiomedium.Simulator;
+import se.sics.emul8.radiomedium.UDGMRadioMedium;
 
 public class SimulatorJSONHandler {
 
@@ -178,6 +179,30 @@ public class SimulatorJSONHandler {
                 value = params.get("propagation-option");
                 if (value != null) {
                     log.debug("CONFIG: propagation-option: {}", value);
+                    if ("n2n-link".equals(value)) {
+                        JsonValue matrix = params.get("matrix-data");
+                        if (matrix == null || !matrix.isArray()) {
+                            log.error("No N2N matrix specified for radio medium!");
+                            reply = createReplyError(id, "command-error", "no matrix specified");
+                        } else {
+                            JsonArray cols = matrix.asArray();
+                            double[][] m = new double[cols.size()][];
+                            for(int i = 0, n = cols.size(); i < n; i++) {
+                                JsonArray r = cols.get(i).asArray();
+                                m[i] = new double[r.size()];
+                                for(int j = 0, jn = r.size(); j < jn; j++) {
+                                    m[i][j] = r.get(j).asDouble();
+                                }
+                            }
+                            simulator.setRadioMedium(new N2NRadioMedium(m));
+                        }
+                    } else if ("udgm".equals(value)) {
+                        simulator.setRadioMedium(new UDGMRadioMedium());
+                    } else if ("nullrm".equals(value)) {
+                        // The null radio medium is the default
+                    } else {
+                        log.error("Unsupported propagation-option: {} - reverting to null radio medium", value);
+                    }
                 }
 //                value = params.get("data");
             }
