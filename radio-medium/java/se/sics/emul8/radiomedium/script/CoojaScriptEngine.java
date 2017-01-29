@@ -50,6 +50,8 @@ import se.sics.emul8.radiomedium.NullRadioMedium;
 import se.sics.emul8.radiomedium.RadioMedium;
 import se.sics.emul8.radiomedium.Simulator;
 import se.sics.emul8.radiomedium.net.Server;
+import se.sics.emul8.radiomedium.util.PcapListener;
+import se.sics.emul8.web.WebServer;
 
 /*
 import org.contikios.cooja.Cooja;
@@ -291,13 +293,47 @@ public class CoojaScriptEngine {
     
     
     public static void main(String[] args) throws IOException, ScriptException {
+        PcapListener pcapListener = null;
+        // web server on - or - off
+        boolean web = false;
+        if (System.getProperty("logback.configurationFile") == null) {
+            System.setProperty("logback.configurationFile", "logback.xml");
+        }
+
+        for (int i = 0; i < args.length; i++) {
+            if ("-ws".equals(args[i])) {
+                web = true;
+            } else if ("-pcap".equals(args[i])) {
+                pcapListener = new PcapListener();
+            } else {
+                System.err.println("Unhandled argument: " + args[i]);
+                System.err.println("Usage: " + CoojaScriptMote.class.getSimpleName() + " [-ws] [-pcap]");
+                System.exit(1);
+            }
+        }
+
         Simulator simulator = new Simulator();
         RadioMedium radioMedium = new NullRadioMedium();
         radioMedium.setSimulator(simulator);
         simulator.setRadioMedium(radioMedium);
+        if (pcapListener != null) {
+            simulator.addRadioListener(pcapListener);
+        }
         Server server = new Server(Simulator.DEFAULT_PORT);
         server.setSimulator(simulator);
         server.start();
+
+        /* Quick hack to get a small web server running - for providing simulation info */
+        if (web) {
+            WebServer ws = new WebServer();
+            ws.setSimulator(simulator);
+            try {
+                ws.startWS();
+            } catch (Exception e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+        }
 
         CoojaScriptEngine engine = new CoojaScriptEngine(simulator);
         /* When should the script start??? */
