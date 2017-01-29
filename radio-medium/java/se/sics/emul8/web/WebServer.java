@@ -95,8 +95,9 @@ public class WebServer extends AbstractHandler {
     public void setSimulator(Simulator simulator) {
         // TODO Auto-generated method stub
         this.simulator = simulator;
-        sniffer = new SnifferServer();
+        sniffer = SnifferServer.getDefault();
         jshark = new JShark(new ExampleAnalyzer(), sniffer.getOutput());
+        sniffer.setSniffer(jshark);
         simulator.addRadioListener(new RadioListener() {
             @Override
             public void packetTransmission(RadioPacket packet) {
