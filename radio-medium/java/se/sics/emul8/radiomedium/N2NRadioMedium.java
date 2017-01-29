@@ -28,12 +28,12 @@ public class N2NRadioMedium extends AbstractRadioMedium {
     public double getRxSuccessProbability(Node source, Node dest) {
         int sourceID = source.getIdAsInteger();
         int destID = dest.getIdAsInteger();
-        if (matrix == null || sourceID < 0 || destID < 0
-                || sourceID >= matrix.length || matrix[sourceID] == null
-                || destID >= matrix[sourceID].length) {
+        if (matrix == null || sourceID <= 0 || destID <= 0
+                || sourceID > matrix.length || matrix[sourceID - 1] == null
+                || destID > matrix[sourceID - 1].length) {
             return 0.0;
         }
-        return matrix[sourceID][destID] * dest.getRadio().getRxProbability();
+        return matrix[sourceID - 1][destID - 1] * dest.getRadio().getRxProbability();
     }
 
     @Override
