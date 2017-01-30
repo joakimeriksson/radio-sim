@@ -6,8 +6,10 @@
   <property name="src" location="java"/>
   <property name="jipv6-src" location="../jipv6/src"/>
   <property name="build" location="build"/>
+  <property name="www" location="www"/>
   <property name="lib" location="lib"/>
   <property name="jipv6-lib" location="../jipv6/lib"/>
+  <property name="jipv6-www" location="../jipv6/www"/>
   <property name="jarfile" location="emul8-radio-medium.jar"/>
   <property name="javac.debug" value="true"/>
   <!-- <property name="ant.build.javac.source" value="1.8"/> -->
@@ -26,6 +28,10 @@
   <target name="init">
     <tstamp/>
     <mkdir dir="${build}"/>
+    <mkdir dir="${www}"/>
+    <copy todir="${www}">
+      <fileset dir="${jipv6-www}"/>
+    </copy>
   </target>
 
   <target name="compile" depends="init" description="compile the source">
@@ -59,6 +65,7 @@
 
   <target name="clean" description="clean up" >
     <delete dir="${build}"/>
+    <delete dir="${www}"/>
     <delete file="${jarfile}" />
   </target>
 

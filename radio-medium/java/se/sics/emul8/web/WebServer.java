@@ -39,14 +39,16 @@ import java.util.Arrays;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import javax.websocket.server.ServerContainer;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
-
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import se.sics.emul8.radiomedium.RadioListener;
 import se.sics.emul8.radiomedium.RadioMedium;
 import se.sics.emul8.radiomedium.RadioPacket;
@@ -56,10 +58,11 @@ import se.sics.jipv6.analyzer.ExampleAnalyzer;
 import se.sics.jipv6.analyzer.JShark;
 import se.sics.jipv6.pcap.CapturedPacket;
 import se.sics.jipv6.server.SnifferServer;
+import se.sics.jipv6.server.SnifferSocket;
 
 public class WebServer extends AbstractHandler {
 
-    Server server;    
+    Server server;
     Simulator simulator;
     JShark jshark;
     SnifferServer sniffer;
@@ -91,7 +94,6 @@ public class WebServer extends AbstractHandler {
         baseRequest.setHandled(true);
     }
 
-    
     public void setSimulator(Simulator simulator) {
         // TODO Auto-generated method stub
         this.simulator = simulator;
@@ -117,24 +119,44 @@ public class WebServer extends AbstractHandler {
         Runnable r = new Runnable() {
             public void run() {
                 server = new Server(8080);
-                ContextHandler context = new ContextHandler("/");
-                context.setContextPath("/");
-                context.setHandler(WebServer.this);
+
+                ResourceHandler resourceHandler = new ResourceHandler();
+                resourceHandler.setDirectoriesListed(true);
+                resourceHandler.setResourceBase("./www");
+                ContextHandler resourceContext = new ContextHandler("/www");
+                resourceContext.setHandler(resourceHandler);
+
+                ContextHandler rmContext = new ContextHandler("/");
+                rmContext.setContextPath("/");
+                rmContext.setHandler(WebServer.this);
 
                 ContextHandler contextSniff = new ContextHandler("/sniffer");
                 contextSniff.setHandler(sniffer);
                 sniffer.setSniffer(jshark);
-                
+
+                ServletContextHandler servletContext = new ServletContextHandler(ServletContextHandler.SESSIONS);
+                servletContext.setContextPath("/");
+
                 ContextHandlerCollection contexts = new ContextHandlerCollection();
-                contexts.setHandlers(new Handler[] { context, contextSniff });
-                
+                contexts.setHandlers(new Handler[] { resourceContext, rmContext, contextSniff, servletContext });
+
                 server.setHandler(contexts);
                 try {
+                    // Initialize javax.websocket layer
+                    ServerContainer wscontainer = WebSocketServerContainerInitializer.configureContext(servletContext);
+
+                    // Add WebSocket endpoint to javax.websocket layer
+                    wscontainer.addEndpoint(SnifferSocket.class);
+
                     System.out.println("Starting jetty web server at 8080");
                     server.start();
                     server.join();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    System.err.println("web server error");
+                    e.printStackTrace();
                 } catch (Exception e) {
-                    // TODO Auto-generated catch block
+                    System.err.println("web server error");
                     e.printStackTrace();
                 }
             }
@@ -143,19 +165,11 @@ public class WebServer extends AbstractHandler {
     }
 
     public void stopWS() {
-	try {
+        try {
             server.stop();
-	}
-	catch(Exception e) {
+        } catch(Exception e) {
             e.printStackTrace();
-	}
-    }
-    
-    public static void main(String[] args) throws Exception {
-        Server server = new Server(8080);
-        server.setHandler(new WebServer());
-        server.start();
-        server.join();
+        }
     }
 
 }
