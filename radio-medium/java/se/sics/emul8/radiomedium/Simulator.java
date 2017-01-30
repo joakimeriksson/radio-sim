@@ -227,6 +227,9 @@ public class Simulator {
     }
 
     public void setRadioMedium(RadioMedium radioMedium) {
+        if (radioMedium != null) {
+            radioMedium.setSimulator(this);
+        }
         this.radioMedium = radioMedium;
     }
 

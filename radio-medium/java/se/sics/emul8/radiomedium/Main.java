@@ -67,7 +67,6 @@ public class Main {
         if (pcapListener != null) {
             simulator.addRadioListener(pcapListener);
         }
-        radioMedium.setSimulator(simulator);
         simulator.setRadioMedium(radioMedium);
         Server server = new Server(Simulator.DEFAULT_PORT);
         server.setSimulator(simulator);
