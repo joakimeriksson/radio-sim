@@ -63,7 +63,8 @@ public class Simulator {
     private final Random simulationRandom;
 
     private RadioListener[] radioListeners = null;
-    
+
+    private final long simulationStartTimeMillis = System.currentTimeMillis();
     private long currentTime;
     private long stepTime;
     private ClientConnection timeController = null;
@@ -86,6 +87,9 @@ public class Simulator {
         this.simulationRandom = r;
     }
 
+    public long getSimulationStartTimeMillis() {
+        return simulationStartTimeMillis;
+    }
     public Random getRandom() {
         return this.simulationRandom;
     }
