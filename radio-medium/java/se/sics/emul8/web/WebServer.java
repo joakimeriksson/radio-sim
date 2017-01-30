@@ -99,6 +99,7 @@ public class WebServer extends AbstractHandler {
         this.simulator = simulator;
         sniffer = SnifferServer.getDefault();
         jshark = new JShark(new ExampleAnalyzer(), sniffer.getOutput());
+        jshark.setStorePackets(true);
         sniffer.setSniffer(jshark);
         simulator.addRadioListener(new RadioListener() {
             @Override
@@ -107,9 +108,10 @@ public class WebServer extends AbstractHandler {
                 CapturedPacket capPacket = new CapturedPacket(packet.getStartTime(), Arrays.copyOfRange(data, 1, data.length));
                 System.out.println("Packet received and sent on to jshark len:" + (packet.getPacketDataAsBytes().length - 1));
                 try {
-                    jshark.packetData(capPacket);                    
+                    jshark.packetData(capPacket);
                 } catch (Exception e) {
                     // TODO: handle exception
+                    e.printStackTrace();
                 }
             }
         });
