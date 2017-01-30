@@ -79,7 +79,11 @@ public class Simulator {
     private Node[] nodes = NO_NODES;
 
     public Simulator() {
-        this.simulationRandom = new Random();
+        this(new Random());
+    }
+
+    public Simulator(Random r) {
+        this.simulationRandom = r;
     }
 
     public Random getRandom() {
