@@ -178,8 +178,9 @@ public class SimulatorJSONHandler {
                 }
                 value = params.get("propagation-option");
                 if (value != null) {
-                    log.debug("CONFIG: propagation-option: {}", value);
-                    if ("n2n-link".equals(value)) {
+                    String option = value.asString();
+                    log.debug("CONFIG: propagation-option: {}", option);
+                    if ("n2n-link".equals(option)) {
                         JsonValue matrix = params.get("matrix-data");
                         JsonArray cols;
                         if (matrix == null || !matrix.isArray() || (cols = matrix.asArray()).size() <= 0) {
@@ -196,12 +197,12 @@ public class SimulatorJSONHandler {
                             }
                             simulator.setRadioMedium(new N2NRadioMedium(m));
                         }
-                    } else if ("udgm".equals(value)) {
+                    } else if ("udgm".equals(option)) {
                         simulator.setRadioMedium(new UDGMRadioMedium());
-                    } else if ("nullrm".equals(value)) {
+                    } else if ("nullrm".equals(option)) {
                         // The null radio medium is the default
                     } else {
-                        log.error("Unsupported propagation-option: {} - reverting to null radio medium", value);
+                        log.error("Unsupported propagation-option: {} - reverting to null radio medium", option);
                     }
                 }
 //                value = params.get("data");
