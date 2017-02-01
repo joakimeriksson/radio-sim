@@ -5,6 +5,6 @@
 	ignore = dirty
 [submodule "jipv6"]
 	path = jipv6
-	url = git@github.com:joakimeriksson/jipv6.git
+	url = https://github.com/joakimeriksson/jipv6.git
 	branch = master
 	ignore = dirty
