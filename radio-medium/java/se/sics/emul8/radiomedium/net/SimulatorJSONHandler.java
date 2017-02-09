@@ -182,17 +182,24 @@ public class SimulatorJSONHandler {
                     log.debug("CONFIG: propagation-option: {}", option);
                     if ("n2n-link".equals(option)) {
                         JsonValue matrix = params.get("matrix-data");
-                        JsonArray cols;
-                        if (matrix == null || !matrix.isArray() || (cols = matrix.asArray()).size() <= 0) {
+                        JsonArray probabilityVector;
+                        JsonValue valueNumberOfNodes = params.get("number-of-nodes");
+                        if (matrix == null || !matrix.isArray() || (probabilityVector = matrix.asArray()).size() <= 0) {
                             log.error("No N2N matrix specified for radio medium!");
                             reply = createReplyError(id, "command-error", "no matrix specified");
+                        } else if(valueNumberOfNodes.asInt() != (int)Math.sqrt(probabilityVector.size())){
+                                log.error("The number of nodes does not match the number of matrix elements");
+                                reply = createReplyError(id, "command-error", "inconsistent data matrix or nodes");
                         } else {
-                            double[][] m = new double[cols.size()][];
-                            for(int i = 0, n = cols.size(); i < n; i++) {
-                                JsonArray r = cols.get(i).asArray();
-                                m[i] = new double[r.size()];
-                                for(int j = 0, jn = r.size(); j < jn; j++) {
-                                    m[i][j] = r.get(j).asDouble();
+                            int numberOfNodes = valueNumberOfNodes.asInt();
+
+                            double[][] m = new double[numberOfNodes][numberOfNodes];
+
+                            /* Reshape the vector to a square matrix*/
+                            for(int i = 0; i < numberOfNodes; i++) {
+                                for(int j = 0; j < numberOfNodes; j++) {
+                                    m[i][j] = probabilityVector.get(j+(i*numberOfNodes)).asDouble();
+                                    log.debug("m[{}][{}]: {}",i, j, m[i][j]);
                                 }
                             }
                             simulator.setRadioMedium(new N2NRadioMedium(m));
