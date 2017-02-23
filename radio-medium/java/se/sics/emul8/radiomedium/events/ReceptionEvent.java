@@ -30,8 +30,6 @@ public class ReceptionEvent extends TimeEvent {
         Transciever t = this.destination.getRadio();
         if(!isStart) {
             t.clearReceiving();
-            /* Only deliver on the end flank */
-            simulator.deliverRadioPacket(packet, destination, rssi);
         } else {
             t.setReceiving(packet, rssi);
         }
