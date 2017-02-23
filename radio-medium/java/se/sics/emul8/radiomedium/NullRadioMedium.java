@@ -69,7 +69,6 @@ public class NullRadioMedium extends AbstractRadioMedium {
                         log.debug("no delivery of radio packet to {} due to channel: {} != {}",
                                 node.getId(), radio.getWirelessChannel(), channel);
                     } else {
-                        simulator.deliverRadioPacket(packet, node, rssi);
                         simulator.generateReceptionEvents(packet, node, rssi);
                     }
                 }

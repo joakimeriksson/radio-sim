@@ -107,7 +107,6 @@ public class UDGMRadioMedium extends AbstractRadioMedium {
                             /* Destination failed to receive but is interfered */
                             simulator.generateReceptionEvents(packet, node, rssi);
                         } else {
-                            simulator.deliverRadioPacket(packet, node, rssi);
                             simulator.generateReceptionEvents(packet, node, rssi);
                         }
                     }
