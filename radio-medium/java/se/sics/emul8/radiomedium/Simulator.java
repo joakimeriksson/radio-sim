@@ -42,6 +42,7 @@ import org.slf4j.LoggerFactory;
 import com.botbox.scheduler.EventQueue;
 import com.botbox.scheduler.TimeEvent;
 import se.sics.emul8.radiomedium.events.ReceptionEvent;
+import se.sics.emul8.radiomedium.events.ReceptionEvent.ReceptionMode;
 import se.sics.emul8.radiomedium.events.TransmissionEvent;
 import se.sics.emul8.radiomedium.net.ClientConnection;
 import se.sics.emul8.radiomedium.util.ArrayUtils;
@@ -317,16 +318,17 @@ public class Simulator {
         }
     }
  
-    public void generateReceptionEvents(RadioPacket packet, Node destination, double rssi) {
+    public void generateReceptionEvents(RadioPacket packet, Node destination, double rssi, boolean doDeliver) {
         synchronized (eventLock) {
             long packetTime = packet.getStartTime();
             if (packetTime < currentTime) {
                 packetTime = currentTime;
             }
             ReceptionEvent teStart =
-                    new ReceptionEvent(packetTime, this, packet, destination, rssi, true);
+                    new ReceptionEvent(packetTime, this, packet, destination, rssi, ReceptionMode.start);
             ReceptionEvent teEnd =
-                    new ReceptionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi, false);
+                    new ReceptionEvent(packetTime + packet.getPacketAirTime(), this, packet, destination, rssi,
+                            doDeliver ? ReceptionMode.delivery : ReceptionMode.interference);
             eventQueue.addEvent(teStart);
             eventQueue.addEvent(teEnd);
         }

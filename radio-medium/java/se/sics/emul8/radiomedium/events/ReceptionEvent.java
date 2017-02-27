@@ -9,16 +9,22 @@ import se.sics.emul8.radiomedium.Transciever;
 
 public class ReceptionEvent extends TimeEvent {
 
+    public static enum ReceptionMode {
+        start,
+        interference,
+        delivery
+    };
+
     private RadioPacket packet;
     private Node destination;
     private double rssi;
-    private boolean isStart;
+    private ReceptionMode mode;
     private Simulator simulator;
 
     public ReceptionEvent(long time, Simulator simulator, RadioPacket packet, Node destination,
-            double rssi, boolean isStart) {
+            double rssi, ReceptionMode mode) {
         super(time);
-        this.isStart = isStart;
+        this.mode = mode;
         this.packet = packet;
         this.destination = destination;
         this.rssi = rssi;
@@ -28,18 +34,21 @@ public class ReceptionEvent extends TimeEvent {
     @Override
     public void execute(long currentTime) {
         Transciever t = this.destination.getRadio();
-        if(!isStart) {
-            t.clearReceiving();
-            /* Only deliver on the end flank */
-            simulator.deliverRadioPacket(packet, destination, rssi);
-        } else {
+        if (mode == ReceptionMode.start) {
             t.setReceiving(packet, rssi);
+        } else {
+            t.clearReceiving();
+            if (mode == ReceptionMode.delivery) {
+                /* Only deliver on the end flank */
+                simulator.deliverRadioPacket(packet, destination, rssi);
+            }
         }
     }
 
     @Override
     public String toString() {
-        return "ReceptionEvent[" + this.time + "," + (this.isStart ? "start" : "end")
+        return "ReceptionEvent[" + this.time + "," + this.mode
                 + "," + destination.getId() + "," + packet + "]";
     }
+
 }

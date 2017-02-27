@@ -61,9 +61,9 @@ public class N2NRadioMedium extends AbstractRadioMedium {
                             // The receiver can not hear the sender
                         } else if (interference || (rxSuccess < 1.0 && random.nextDouble() > rxSuccess)) {
                             /* Destination failed to receive but is interfered */
-                            simulator.generateReceptionEvents(packet, node, rssi);
+                            simulator.generateReceptionEvents(packet, node, rssi, false);
                         } else {
-                            simulator.generateReceptionEvents(packet, node, rssi);
+                            simulator.generateReceptionEvents(packet, node, rssi, true);
                         }
                     }
                 }
